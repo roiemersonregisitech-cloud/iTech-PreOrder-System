@@ -162,7 +162,7 @@ export default function InventoryPage() {
     const res = await fetch('/api/inventory/central', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ product_id: centralProductId, qty: qtyNum }),
+      body: JSON.stringify({ action: 'add', product_id: centralProductId, qty: qtyNum }),
     });
 
     const data = await res.json();
@@ -184,15 +184,14 @@ export default function InventoryPage() {
       return;
     }
 
-    const res = await fetch('/api/allocations/direct', {
+    const res = await fetch('/api/inventory/central', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        branch_id: allocBranchId,
+        action: 'allocate',
         product_id: allocProductId,
-        action: 'add',
+        branch_id: allocBranchId,
         qty: qtyNum,
-        reason: 'Super admin allocation from central inventory',
       }),
     });
 
@@ -239,7 +238,7 @@ export default function InventoryPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         product_id: transferProductId,
-        from_branch_id: transferSourceBranchId,
+        source_branch_id: transferSourceBranchId,
         destinations: parsedDestinations,
       }),
     });
@@ -268,15 +267,14 @@ export default function InventoryPage() {
 
     const prod = reclaimItem.product as Product;
 
-    const res = await fetch('/api/allocations/direct', {
+    const res = await fetch('/api/inventory/central', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        branch_id: reclaimItem.branch_id,
-        product_id: prod.id,
         action: 'reclaim',
+        product_id: prod.id,
+        branch_id: reclaimItem.branch_id,
         qty: qtyNum,
-        reason: 'Super admin reclaimed stock to central inventory',
       }),
     });
 

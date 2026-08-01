@@ -130,6 +130,11 @@ export default function ReservationsPage() {
       return;
     }
 
+    if (!customerName.trim() || !customerContact.trim()) {
+      setReserveError('Customer name and contact information are required');
+      return;
+    }
+
     const idempotencyKey = crypto.randomUUID();
     const res = await fetch('/api/reservations', {
       method: 'POST',
@@ -510,7 +515,7 @@ export default function ReservationsPage() {
                     type="text"
                     value={customerName}
                     onChange={e => setCustomerName(e.target.value)}
-                    placeholder="Optional"
+                    placeholder="Required"
                     style={{
                       width: '100%', padding: '0.6rem 0.8rem',
                       background: 'var(--bg-input)', border: '1px solid var(--border-primary)',
@@ -527,7 +532,7 @@ export default function ReservationsPage() {
                   type="text"
                   value={customerContact}
                   onChange={e => setCustomerContact(e.target.value)}
-                  placeholder="Phone or email (optional)"
+                  placeholder="Phone or email (required)"
                   style={{
                     width: '100%', padding: '0.6rem 0.8rem',
                     background: 'var(--bg-input)', border: '1px solid var(--border-primary)',

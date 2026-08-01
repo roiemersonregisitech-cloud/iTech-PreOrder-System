@@ -19,9 +19,9 @@ export async function POST(request: NextRequest) {
     const { branch_id, product_id, qty, customer_name, customer_contact, idempotency_key } = body;
 
     // Validate required fields
-    if (!branch_id || !product_id || !qty || !idempotency_key) {
+    if (!branch_id || !product_id || !qty || !customer_name || !customer_contact || !idempotency_key) {
       return NextResponse.json(
-        { error: 'Missing required fields: branch_id, product_id, qty, idempotency_key' },
+        { error: 'Missing required fields: branch_id, product_id, qty, customer_name, customer_contact, idempotency_key' },
         { status: 400 }
       );
     }
