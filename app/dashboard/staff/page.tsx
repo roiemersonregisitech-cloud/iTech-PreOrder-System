@@ -150,12 +150,14 @@ export default function StaffPage() {
                   <span className={`badge ${s.is_active ? 'badge-confirmed' : 'badge-cancelled'}`}>{s.is_active ? 'Active' : 'Inactive'}</span>
                 </td>
                 <td style={{ padding: '0.75rem 1rem' }}>
-                  <button id={`toggle-staff-${s.id}`} onClick={() => toggleActive(s)} style={{
-                    padding: '0.3rem 0.6rem', borderRadius: 'var(--radius-sm)',
-                    background: s.is_active ? 'var(--accent-danger-bg)' : 'var(--accent-success-bg)',
-                    border: 'none', color: s.is_active ? 'var(--accent-danger)' : 'var(--accent-success)',
-                    fontSize: '0.75rem', cursor: 'pointer', fontWeight: 600,
-                  }}>{s.is_active ? 'Deactivate' : 'Activate'}</button>
+                  {(currentStaff?.role === 'super_admin' || (currentStaff?.role === 'branch_admin' && s.role === 'cashier')) && (
+                    <button id={`toggle-staff-${s.id}`} onClick={() => toggleActive(s)} style={{
+                      padding: '0.3rem 0.6rem', borderRadius: 'var(--radius-sm)',
+                      background: s.is_active ? 'var(--accent-danger-bg)' : 'var(--accent-success-bg)',
+                      border: 'none', color: s.is_active ? 'var(--accent-danger)' : 'var(--accent-success)',
+                      fontSize: '0.75rem', cursor: 'pointer', fontWeight: 600,
+                    }}>{s.is_active ? 'Deactivate' : 'Activate'}</button>
+                  )}
                 </td>
               </tr>
             ))}

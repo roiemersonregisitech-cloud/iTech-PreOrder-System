@@ -24,8 +24,13 @@ export async function PUT(
     if (!target) return NextResponse.json({ error: 'Staff not found' }, { status: 404 });
 
     // branch_admin can only manage staff in their branch
-    if (session.staff.role === 'branch_admin' && target.branch_id !== session.staff.branch_id) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    if (session.staff.role === 'branch_admin') {
+      if (target.branch_id !== session.staff.branch_id) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
+      if (target.role !== 'cashier') {
+        return NextResponse.json({ error: 'Forbidden: Branch admins can only manage cashiers' }, { status: 403 });
+      }
     }
 
     const updates: Record<string, unknown> = {};
