@@ -20,6 +20,8 @@ export default function ProductsPage() {
   const [newName, setNewName] = useState('');
   const [newDesc, setNewDesc] = useState('');
   const [newPrice, setNewPrice] = useState('');
+  const [newImageFile, setNewImageFile] = useState<File | null>(null);
+  const [newImagePreview, setNewImagePreview] = useState<string | null>(null);
   const [createError, setCreateError] = useState('');
 
   // Edit Modal
@@ -29,6 +31,8 @@ export default function ProductsPage() {
   const [editDesc, setEditDesc] = useState('');
   const [editPrice, setEditPrice] = useState('');
   const [editActive, setEditActive] = useState(true);
+  const [editImageFile, setEditImageFile] = useState<File | null>(null);
+  const [editImagePreview, setEditImagePreview] = useState<string | null>(null);
   const [editError, setEditError] = useState('');
 
   // Delete Modal
@@ -95,11 +99,18 @@ export default function ProductsPage() {
       return;
     }
 
+    // Upload image if one was selected
+    if (newImageFile && data.data?.id) {
+      await uploadProductImage(data.data.id, newImageFile);
+    }
+
     setShowCreate(false);
     setNewSku('');
     setNewName('');
     setNewDesc('');
     setNewPrice('');
+    setNewImageFile(null);
+    setNewImagePreview(null);
     fetchProducts();
   }
 
@@ -111,6 +122,8 @@ export default function ProductsPage() {
     setEditDesc(p.description || '');
     setEditPrice(p.unit_price !== null ? String(p.unit_price) : '');
     setEditActive(p.is_active);
+    setEditImageFile(null);
+    setEditImagePreview(p.image_url || null);
     setEditError('');
   }
 
@@ -141,8 +154,49 @@ export default function ProductsPage() {
       return;
     }
 
+    // Upload new image if one was selected
+    if (editImageFile && editProduct.id) {
+      await uploadProductImage(editProduct.id, editImageFile);
+    }
+
     setEditProduct(null);
+    setEditImageFile(null);
+    setEditImagePreview(null);
     fetchProducts();
+  }
+
+  // Upload product image
+  async function uploadProductImage(productId: string, file: File) {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('product_id', productId);
+    await fetch('/api/products/upload-image', {
+      method: 'POST',
+      body: formData,
+    });
+  }
+
+  // Handle image file selection
+  function handleImageSelect(file: File | null, mode: 'create' | 'edit') {
+    if (!file) return;
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      if (mode === 'create') setCreateError('Invalid image type. Use JPEG, PNG, or WebP.');
+      else setEditError('Invalid image type. Use JPEG, PNG, or WebP.');
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      if (mode === 'create') setCreateError('Image too large. Max 2MB.');
+      else setEditError('Image too large. Max 2MB.');
+      return;
+    }
+    const url = URL.createObjectURL(file);
+    if (mode === 'create') {
+      setNewImageFile(file);
+      setNewImagePreview(url);
+    } else {
+      setEditImageFile(file);
+      setEditImagePreview(url);
+    }
   }
 
   // Handle Delete Product
@@ -239,7 +293,7 @@ export default function ProductsPage() {
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
           <thead>
             <tr style={{ borderBottom: '1px solid var(--border-primary)' }}>
-              {['SKU', 'Product Name', 'Description', 'Unit Price', 'Status', isSuperAdmin ? 'Actions' : ''].filter(Boolean).map(h => (
+              {['', 'SKU', 'Product Name', 'Description', 'Unit Price', 'Status', isSuperAdmin ? 'Actions' : ''].filter(Boolean).map(h => (
                 <th key={h} style={{ padding: '0.75rem 1rem', textAlign: 'left', color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{h}</th>
               ))}
             </tr>
@@ -254,6 +308,25 @@ export default function ProductsPage() {
             ) : (
               paginatedProducts.map(p => (
                 <tr key={p.id} style={{ borderBottom: '1px solid var(--border-secondary)', opacity: p.is_active ? 1 : 0.6 }}>
+                  <td style={{ padding: '0.5rem 1rem', width: '48px' }}>
+                    {p.image_url ? (
+                      <img
+                        src={p.image_url}
+                        alt={p.name}
+                        style={{
+                          width: '40px', height: '40px', borderRadius: 'var(--radius-sm)',
+                          objectFit: 'cover', border: '1px solid var(--border-secondary)',
+                        }}
+                      />
+                    ) : (
+                      <div style={{
+                        width: '40px', height: '40px', borderRadius: 'var(--radius-sm)',
+                        background: 'var(--bg-tertiary)', display: 'flex', alignItems: 'center',
+                        justifyContent: 'center', fontSize: '1rem', color: 'var(--text-muted)',
+                        border: '1px solid var(--border-secondary)',
+                      }}>📦</div>
+                    )}
+                  </td>
                   <td style={{ padding: '0.75rem 1rem', fontFamily: 'monospace', fontWeight: 700, color: 'var(--accent-primary)' }}>{p.sku}</td>
                   <td style={{ padding: '0.75rem 1rem', fontWeight: 600, color: 'var(--text-heading)' }}>{p.name}</td>
                   <td style={{ padding: '0.75rem 1rem', color: 'var(--text-muted)', maxWidth: '260px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.description || '—'}</td>
@@ -375,6 +448,45 @@ export default function ProductsPage() {
             style={inputStyle}
           />
 
+          {/* Image Upload */}
+          <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>
+            Product Photo (optional)
+          </label>
+          <div
+            onClick={() => document.getElementById('new-image-input')?.click()}
+            onDragOver={e => { e.preventDefault(); e.stopPropagation(); }}
+            onDrop={e => { e.preventDefault(); e.stopPropagation(); const f = e.dataTransfer.files[0]; if (f) handleImageSelect(f, 'create'); }}
+            style={{
+              width: '100%', padding: newImagePreview ? '0.5rem' : '1.5rem', marginBottom: '0.75rem',
+              border: '2px dashed var(--border-primary)', borderRadius: 'var(--radius-md)',
+              background: 'var(--bg-input)', cursor: 'pointer', textAlign: 'center',
+              transition: 'border-color 0.2s',
+            }}
+          >
+            {newImagePreview ? (
+              <div style={{ position: 'relative', display: 'inline-block' }}>
+                <img src={newImagePreview} alt="Preview" style={{ maxHeight: '120px', borderRadius: 'var(--radius-sm)', objectFit: 'contain' }} />
+                <button
+                  type="button"
+                  onClick={e => { e.stopPropagation(); setNewImageFile(null); setNewImagePreview(null); }}
+                  style={{
+                    position: 'absolute', top: '-8px', right: '-8px', width: '22px', height: '22px',
+                    borderRadius: '50%', background: 'var(--accent-danger)', color: 'white',
+                    border: 'none', cursor: 'pointer', fontSize: '0.7rem', fontWeight: 700,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}
+                >✕</button>
+              </div>
+            ) : (
+              <div>
+                <div style={{ fontSize: '1.5rem', marginBottom: '0.25rem' }}>📷</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Click or drag to upload (JPEG, PNG, WebP — max 2MB)</div>
+              </div>
+            )}
+            <input id="new-image-input" type="file" accept="image/jpeg,image/png,image/webp" style={{ display: 'none' }}
+              onChange={e => { const f = e.target.files?.[0]; if (f) handleImageSelect(f, 'create'); e.target.value = ''; }} />
+          </div>
+
           {createError && (
             <div style={{ padding: '0.5rem 0.8rem', borderRadius: 'var(--radius-sm)', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--accent-danger)', fontSize: '0.8rem', marginBottom: '1rem' }}>
               {createError}
@@ -465,6 +577,45 @@ export default function ProductsPage() {
               />
               Active Product
             </label>
+          </div>
+
+          {/* Image Upload */}
+          <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>
+            Product Photo
+          </label>
+          <div
+            onClick={() => document.getElementById('edit-image-input')?.click()}
+            onDragOver={e => { e.preventDefault(); e.stopPropagation(); }}
+            onDrop={e => { e.preventDefault(); e.stopPropagation(); const f = e.dataTransfer.files[0]; if (f) handleImageSelect(f, 'edit'); }}
+            style={{
+              width: '100%', padding: editImagePreview ? '0.5rem' : '1.5rem', marginBottom: '0.75rem',
+              border: '2px dashed var(--border-primary)', borderRadius: 'var(--radius-md)',
+              background: 'var(--bg-input)', cursor: 'pointer', textAlign: 'center',
+              transition: 'border-color 0.2s',
+            }}
+          >
+            {editImagePreview ? (
+              <div style={{ position: 'relative', display: 'inline-block' }}>
+                <img src={editImagePreview} alt="Preview" style={{ maxHeight: '120px', borderRadius: 'var(--radius-sm)', objectFit: 'contain' }} />
+                <button
+                  type="button"
+                  onClick={e => { e.stopPropagation(); setEditImageFile(null); setEditImagePreview(null); }}
+                  style={{
+                    position: 'absolute', top: '-8px', right: '-8px', width: '22px', height: '22px',
+                    borderRadius: '50%', background: 'var(--accent-danger)', color: 'white',
+                    border: 'none', cursor: 'pointer', fontSize: '0.7rem', fontWeight: 700,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}
+                >✕</button>
+              </div>
+            ) : (
+              <div>
+                <div style={{ fontSize: '1.5rem', marginBottom: '0.25rem' }}>📷</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Click or drag to upload (JPEG, PNG, WebP — max 2MB)</div>
+              </div>
+            )}
+            <input id="edit-image-input" type="file" accept="image/jpeg,image/png,image/webp" style={{ display: 'none' }}
+              onChange={e => { const f = e.target.files?.[0]; if (f) handleImageSelect(f, 'edit'); e.target.value = ''; }} />
           </div>
 
           {editError && (

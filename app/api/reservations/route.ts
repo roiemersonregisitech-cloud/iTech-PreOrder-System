@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { branch_id, product_id, qty, customer_name, customer_contact, idempotency_key } = body;
+    const { branch_id, product_id, qty, customer_name, customer_contact, customer_address, idempotency_key } = body;
 
     // Validate required fields
     if (!branch_id || !product_id || !qty || !customer_name || !customer_contact || !idempotency_key) {
@@ -60,6 +60,7 @@ export async function POST(request: NextRequest) {
       p_customer_name: customer_name || null,
       p_customer_contact: customer_contact || null,
       p_idempotency_key: idempotency_key,
+      p_customer_address: customer_address || null,
     });
 
     if (error) {

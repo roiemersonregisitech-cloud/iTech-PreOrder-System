@@ -31,6 +31,7 @@ export default function ReservationsPage() {
   const [reserveQty, setReserveQty] = useState(1);
   const [customerName, setCustomerName] = useState('');
   const [customerContact, setCustomerContact] = useState('');
+  const [customerAddress, setCustomerAddress] = useState('');
   const [productSearch, setProductSearch] = useState('');
   const [reserveError, setReserveError] = useState('');
 
@@ -151,6 +152,7 @@ export default function ReservationsPage() {
         qty: reserveQty,
         customer_name: customerName || null,
         customer_contact: customerContact || null,
+        customer_address: customerAddress || null,
         idempotency_key: idempotencyKey,
       }),
     });
@@ -167,6 +169,7 @@ export default function ReservationsPage() {
     setReserveQty(1);
     setCustomerName('');
     setCustomerContact('');
+    setCustomerAddress('');
     setProductSearch('');
     fetchReservations();
     fetchInventory();
@@ -344,6 +347,12 @@ export default function ReservationsPage() {
                     <span>{r.customer_contact}</span>
                   </div>
                 )}
+                {r.customer_address && (
+                  <div style={{ gridColumn: '1 / -1' }}>
+                    <span style={{ color: 'var(--text-muted)' }}>Address: </span>
+                    <span>{r.customer_address}</span>
+                  </div>
+                )}
                 <div>
                   <span style={{ color: 'var(--text-muted)' }}>Cashier: </span>
                   <span>{(r.cashier as unknown as { full_name: string })?.full_name || 'N/A'}</span>
@@ -458,39 +467,76 @@ export default function ReservationsPage() {
             />
           </div>
 
-          {productSearch && filteredProducts.length > 0 && !selectedProduct && (
+          {/* Visual Product Grid */}
+          {!selectedProduct && (
             <div style={{
-              maxHeight: '200px', overflowY: 'auto', marginBottom: '1rem',
-              border: '1px solid var(--border-primary)', borderRadius: 'var(--radius-md)',
+              display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '1rem',
+              maxHeight: '400px', overflowY: 'auto', marginBottom: '1rem', padding: '0.2rem'
             }}>
-              {filteredProducts.slice(0, 10).map(p => {
+              {filteredProducts.map(p => {
                 const inv = inventory.find(i => i.branch_id === selectedBranch && (i.product as Product)?.id === p.id);
                 const avail = inv ? inv.qty_on_hand - inv.qty_reserved : 0;
                 return (
-                  <button
+                  <div
                     key={p.id}
                     onClick={() => { setSelectedProduct(p.id); setProductSearch(p.name); }}
                     style={{
-                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                      width: '100%', padding: '0.6rem 0.8rem',
-                      background: 'transparent', border: 'none', borderBottom: '1px solid var(--border-secondary)',
-                      color: 'var(--text-primary)', fontSize: '0.8rem', cursor: 'pointer',
-                      textAlign: 'left',
+                      border: '1px solid var(--border-primary)', borderRadius: 'var(--radius-md)',
+                      background: 'var(--bg-secondary)', overflow: 'hidden', cursor: 'pointer',
+                      transition: 'transform 0.2s, box-shadow 0.2s',
+                      display: 'flex', flexDirection: 'column', height: '100%',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+                    }}
+                    onMouseEnter={(e) => {
+                       e.currentTarget.style.transform = 'translateY(-2px)';
+                       e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)';
+                       e.currentTarget.style.borderColor = 'var(--accent-primary)';
+                    }}
+                    onMouseLeave={(e) => {
+                       e.currentTarget.style.transform = 'none';
+                       e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.05)';
+                       e.currentTarget.style.borderColor = 'var(--border-primary)';
                     }}
                   >
-                    <div>
-                      <div style={{ fontWeight: 600 }}>{p.name}</div>
-                      <div style={{ color: 'var(--text-muted)', fontSize: '0.7rem' }}>SKU: {p.sku}</div>
+                    {/* Product Image */}
+                    <div style={{ height: '140px', background: 'var(--bg-tertiary)', position: 'relative' }}>
+                       {p.image_url ? (
+                         <img src={p.image_url} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                       ) : (
+                         <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '3rem', opacity: 0.5 }}>📦</div>
+                       )}
+                       {avail <= 0 && (
+                         <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: '1.2rem' }}>
+                           OUT OF STOCK
+                         </div>
+                       )}
                     </div>
-                    <span style={{
-                      color: avail > 0 ? 'var(--accent-success)' : 'var(--accent-danger)',
-                      fontWeight: 700, fontSize: '0.75rem',
-                    }}>
-                      {avail} avail
-                    </span>
-                  </button>
+                    {/* Product Info */}
+                    <div style={{ padding: '0.75rem', display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
+                      <div style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--text-heading)', marginBottom: '0.2rem', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{p.name}</div>
+                      <div style={{ color: 'var(--text-muted)', fontSize: '0.7rem', marginBottom: '0.5rem', fontFamily: 'monospace' }}>{p.sku}</div>
+                      <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                         <span style={{ fontWeight: 800, color: 'var(--text-primary)', fontSize: '0.9rem' }}>
+                            {p.unit_price ? `₱${Number(p.unit_price).toLocaleString('en-PH', { maximumFractionDigits: 0 })}` : '—'}
+                         </span>
+                         <span style={{
+                           color: avail > 0 ? 'var(--accent-success)' : 'var(--accent-danger)',
+                           fontWeight: 700, fontSize: '0.75rem',
+                           background: avail > 0 ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                           padding: '0.2rem 0.4rem', borderRadius: '4px'
+                         }}>
+                           {avail} avail
+                         </span>
+                      </div>
+                    </div>
+                  </div>
                 );
               })}
+              {filteredProducts.length === 0 && (
+                <div style={{ gridColumn: '1 / -1', padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                  No products found.
+                </div>
+              )}
             </div>
           )}
 
@@ -538,6 +584,22 @@ export default function ReservationsPage() {
                   value={customerContact}
                   onChange={e => setCustomerContact(e.target.value)}
                   placeholder="Phone or email (required)"
+                  style={{
+                    width: '100%', padding: '0.6rem 0.8rem',
+                    background: 'var(--bg-input)', border: '1px solid var(--border-primary)',
+                    borderRadius: 'var(--radius-md)', color: 'var(--text-primary)',
+                    fontSize: '0.85rem', outline: 'none',
+                  }}
+                />
+              </div>
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>Customer Address (Optional)</label>
+                <input
+                  id="customer-address"
+                  type="text"
+                  value={customerAddress}
+                  onChange={e => setCustomerAddress(e.target.value)}
+                  placeholder="Shipping address, etc."
                   style={{
                     width: '100%', padding: '0.6rem 0.8rem',
                     background: 'var(--bg-input)', border: '1px solid var(--border-primary)',

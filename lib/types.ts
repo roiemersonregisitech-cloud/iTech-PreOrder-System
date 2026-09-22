@@ -21,6 +21,7 @@ export interface Product {
   name: string;
   description: string | null;
   unit_price: number | null;
+  image_url: string | null;
   central_qty: number;
   is_active: boolean;
   created_at: string;
@@ -59,6 +60,7 @@ export interface Reservation {
   cashier_id: string;
   customer_name: string | null;
   customer_contact: string | null;
+  customer_address: string | null;
   status: ReservationStatus;
   created_at: string;
   expires_at: string;
@@ -105,6 +107,7 @@ export interface DeliveredItem {
   delivered_at: string;
   customer_name: string | null;
   customer_contact: string | null;
+  customer_address: string | null;
   preorder_code: string;
   downpayment_amount: number;
   created_at: string;
@@ -180,6 +183,7 @@ export interface ReserveItemRequest {
   qty: number;
   customer_name?: string;
   customer_contact?: string;
+  customer_address?: string;
   idempotency_key: string;
 }
 
