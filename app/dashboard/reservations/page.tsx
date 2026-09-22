@@ -290,6 +290,7 @@ export default function ReservationsPage() {
             {s || 'All'}
           </button>
         ))}
+        </div>
       </div>
 
       {/* Reservation Cards */}

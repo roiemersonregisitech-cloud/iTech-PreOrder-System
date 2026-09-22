@@ -24,6 +24,119 @@ interface TransferDestination {
   qty: string;
 }
 
+const inputStyle: React.CSSProperties = {
+  width: '100%',
+  padding: '0.6rem 0.8rem',
+  background: 'var(--bg-input)',
+  border: '1px solid var(--border-primary)',
+  borderRadius: 'var(--radius-md)',
+  color: 'var(--text-primary)',
+  fontSize: '0.85rem',
+  outline: 'none',
+  marginBottom: '0.75rem',
+};
+
+const labelStyle: React.CSSProperties = {
+  display: 'block',
+  fontSize: '0.8rem',
+  fontWeight: 600,
+  color: 'var(--text-secondary)',
+  marginBottom: '0.3rem',
+};
+
+function ProductPicker({ 
+  selectedProductId, 
+  setSelectedProductId, 
+  search, 
+  setSearch, 
+  type,
+  products
+}: { 
+  selectedProductId: string, 
+  setSelectedProductId: (id: string) => void,
+  search: string,
+  setSearch: (s: string) => void,
+  type: 'central' | 'allocate' | 'transfer',
+  products: Product[]
+}) {
+  const filteredProducts = products.filter(p => 
+    p.is_active !== false &&
+    (p.name.toLowerCase().includes(search.toLowerCase()) ||
+     p.sku.toLowerCase().includes(search.toLowerCase()))
+  );
+
+  if (selectedProductId) {
+    const p = products.find(p => p.id === selectedProductId);
+    return (
+      <div style={{ marginBottom: '1rem', padding: '0.75rem', background: 'var(--bg-tertiary)', borderRadius: 'var(--radius-md)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Selected Product</div>
+          <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{p?.name}</div>
+        </div>
+        <button
+          type="button"
+          onClick={() => setSelectedProductId('')}
+          style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-primary)', padding: '0.4rem 0.8rem', borderRadius: 'var(--radius-sm)', fontSize: '0.75rem', cursor: 'pointer', color: 'var(--text-primary)' }}
+        >
+          Change
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ marginBottom: '1rem' }}>
+      <input
+        type="text"
+        value={search}
+        onChange={e => setSearch(e.target.value)}
+        placeholder="Search by name or SKU…"
+        style={inputStyle}
+      />
+      <div className="product-picker-grid" style={{
+        display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '1rem',
+        maxHeight: '300px', overflowY: 'auto', padding: '0.2rem'
+      }}>
+        {filteredProducts.map(p => {
+          const availText = `${p.central_qty || 0} in central`;
+          return (
+            <div
+              key={p.id}
+              onClick={() => { setSelectedProductId(p.id); setSearch(''); }}
+              style={{
+                border: '1px solid var(--border-primary)', borderRadius: 'var(--radius-md)',
+                background: 'var(--bg-secondary)', overflow: 'hidden', cursor: 'pointer',
+                transition: 'transform 0.2s, box-shadow 0.2s',
+                display: 'flex', flexDirection: 'column', height: '100%',
+              }}
+            >
+              <div style={{ height: '120px', background: 'var(--bg-tertiary)', position: 'relative' }}>
+                 {p.image_url ? (
+                   <img src={p.image_url} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                 ) : (
+                   <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', opacity: 0.5 }}>📦</div>
+                 )}
+              </div>
+              <div style={{ padding: '0.75rem', display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
+                <div style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--text-heading)', marginBottom: '0.2rem', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{p.name}</div>
+                <div style={{ color: 'var(--text-muted)', fontSize: '0.7rem', marginBottom: '0.5rem', fontFamily: 'monospace' }}>{p.sku}</div>
+                <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                   <span style={{ fontSize: '0.75rem', color: 'var(--accent-primary)', fontWeight: 600 }}>{availText}</span>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+        {filteredProducts.length === 0 && (
+          <div style={{ gridColumn: '1 / -1', padding: '1rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+            No products found.
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function InventoryPage() {
   const [inventory, setInventory] = useState<InventoryRow[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -370,27 +483,6 @@ export default function InventoryPage() {
     setExpandedProductId(prev => (prev === productId ? null : productId));
   }
 
-  const inputStyle: React.CSSProperties = {
-    width: '100%',
-    padding: '0.6rem 0.8rem',
-    background: 'var(--bg-input)',
-    border: '1px solid var(--border-primary)',
-    borderRadius: 'var(--radius-md)',
-    color: 'var(--text-primary)',
-    fontSize: '0.85rem',
-    outline: 'none',
-    marginBottom: '0.75rem',
-  };
-
-  const labelStyle: React.CSSProperties = {
-    display: 'block',
-    fontSize: '0.8rem',
-    fontWeight: 600,
-    color: 'var(--text-secondary)',
-    marginBottom: '0.3rem',
-  };
-
-
   // Transfer Math Live Prediction
   const activeTransferProduct = products.find(p => p.id === transferProductId);
   const transferSourceAvail = transferSourceBranchId && transferProductId ? getBranchAvailable(transferSourceBranchId, transferProductId) : 0;
@@ -401,97 +493,6 @@ export default function InventoryPage() {
   // Pagination Math
   const totalPages = Math.ceil(grouped.length / pageSize);
   const paginatedGrouped = grouped.slice((page - 1) * pageSize, page * pageSize);
-
-  function ProductPicker({ 
-    selectedProductId, 
-    setSelectedProductId, 
-    search, 
-    setSearch, 
-    type 
-  }: { 
-    selectedProductId: string, 
-    setSelectedProductId: (id: string) => void,
-    search: string,
-    setSearch: (s: string) => void,
-    type: 'central' | 'allocate' | 'transfer'
-  }) {
-    const filteredProducts = products.filter(p => 
-      p.is_active !== false &&
-      (p.name.toLowerCase().includes(search.toLowerCase()) ||
-       p.sku.toLowerCase().includes(search.toLowerCase()))
-    );
-
-    if (selectedProductId) {
-      const p = products.find(p => p.id === selectedProductId);
-      return (
-        <div style={{ marginBottom: '1rem', padding: '0.75rem', background: 'var(--bg-tertiary)', borderRadius: 'var(--radius-md)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Selected Product</div>
-            <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{p?.name}</div>
-          </div>
-          <button
-            type="button"
-            onClick={() => setSelectedProductId('')}
-            style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-primary)', padding: '0.4rem 0.8rem', borderRadius: 'var(--radius-sm)', fontSize: '0.75rem', cursor: 'pointer', color: 'var(--text-primary)' }}
-          >
-            Change
-          </button>
-        </div>
-      );
-    }
-
-    return (
-      <div style={{ marginBottom: '1rem' }}>
-        <input
-          type="text"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          placeholder="Search by name or SKU…"
-          style={inputStyle}
-        />
-        <div className="product-picker-grid" style={{
-          display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '1rem',
-          maxHeight: '300px', overflowY: 'auto', padding: '0.2rem'
-        }}>
-          {filteredProducts.map(p => {
-            let availText = `${p.central_qty || 0} in central`;
-            return (
-              <div
-                key={p.id}
-                onClick={() => { setSelectedProductId(p.id); setSearch(''); }}
-                style={{
-                  border: '1px solid var(--border-primary)', borderRadius: 'var(--radius-md)',
-                  background: 'var(--bg-secondary)', overflow: 'hidden', cursor: 'pointer',
-                  transition: 'transform 0.2s, box-shadow 0.2s',
-                  display: 'flex', flexDirection: 'column', height: '100%',
-                }}
-              >
-                <div style={{ height: '120px', background: 'var(--bg-tertiary)', position: 'relative' }}>
-                   {p.image_url ? (
-                     <img src={p.image_url} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                   ) : (
-                     <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', opacity: 0.5 }}>📦</div>
-                   )}
-                </div>
-                <div style={{ padding: '0.75rem', display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
-                  <div style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--text-heading)', marginBottom: '0.2rem', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{p.name}</div>
-                  <div style={{ color: 'var(--text-muted)', fontSize: '0.7rem', marginBottom: '0.5rem', fontFamily: 'monospace' }}>{p.sku}</div>
-                  <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                     <span style={{ fontSize: '0.75rem', color: 'var(--accent-primary)', fontWeight: 600 }}>{availText}</span>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-          {filteredProducts.length === 0 && (
-            <div style={{ gridColumn: '1 / -1', padding: '1rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-              No products found.
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="animate-fade-in">
@@ -813,6 +814,7 @@ export default function InventoryPage() {
             search={centralProductSearch}
             setSearch={setCentralProductSearch}
             type="central"
+            products={products}
           />
 
           <label style={labelStyle}>Quantity to Add to Central Stock</label>
@@ -869,6 +871,7 @@ export default function InventoryPage() {
             search={allocProductSearch}
             setSearch={setAllocProductSearch}
             type="allocate"
+            products={products}
           />
 
           <label style={labelStyle}>Target Branch</label>
@@ -939,6 +942,7 @@ export default function InventoryPage() {
             search={transferProductSearch}
             setSearch={setTransferProductSearch}
             type="transfer"
+            products={products}
           />
 
           <label style={labelStyle}>Source Branch</label>
