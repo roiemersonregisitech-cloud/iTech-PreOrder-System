@@ -34,7 +34,6 @@ export async function POST(request: NextRequest) {
       .from('products')
       .update({
         central_qty,
-        updated_at: new Date().toISOString(),
       })
       .eq('id', product_id);
 

@@ -14,7 +14,6 @@ const navItems = {
     { href: '/dashboard', label: 'Dashboard', icon: 'grid' },
     { href: '/dashboard/reservations', label: 'Reservations', icon: 'clock' },
     { href: '/dashboard/inventory', label: 'Inventory', icon: 'package' },
-    { href: '/dashboard/allocations', label: 'Allocations', icon: 'layers' },
     { href: '/dashboard/preorders', label: 'Preorders', icon: 'file-text' },
     { href: '/dashboard/deliveries', label: 'Customer Received', icon: 'truck' },
   ],
