@@ -10,6 +10,7 @@ export default function StaffPage() {
   const [currentStaff, setCurrentStaff] = useState<Staff | null>(null);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
+  const [updatingStaffId, setUpdatingStaffId] = useState<string | null>(null);
 
   // Pagination state
   const [page, setPage] = useState(1);
@@ -81,12 +82,14 @@ export default function StaffPage() {
   }
 
   async function toggleActive(staff: Staff) {
+    setUpdatingStaffId(staff.id);
     await fetch(`/api/staff/${staff.id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ is_active: !staff.is_active }),
     });
-    fetchStaff();
+    await fetchStaff();
+    setUpdatingStaffId(null);
   }
 
   const roleBadge = (role: string) => {
@@ -151,12 +154,15 @@ export default function StaffPage() {
                 </td>
                 <td style={{ padding: '0.75rem 1rem' }}>
                   {(currentStaff?.role === 'super_admin' || (currentStaff?.role === 'branch_admin' && s.role === 'cashier')) && (
-                    <button id={`toggle-staff-${s.id}`} onClick={() => toggleActive(s)} style={{
+                    <button id={`toggle-staff-${s.id}`} disabled={updatingStaffId === s.id} onClick={() => toggleActive(s)} style={{
                       padding: '0.3rem 0.6rem', borderRadius: 'var(--radius-sm)',
                       background: s.is_active ? 'var(--accent-danger-bg)' : 'var(--accent-success-bg)',
                       border: 'none', color: s.is_active ? 'var(--accent-danger)' : 'var(--accent-success)',
-                      fontSize: '0.75rem', cursor: 'pointer', fontWeight: 600,
-                    }}>{s.is_active ? 'Deactivate' : 'Activate'}</button>
+                      fontSize: '0.75rem', cursor: updatingStaffId === s.id ? 'not-allowed' : 'pointer', fontWeight: 600,
+                      opacity: updatingStaffId === s.id ? 0.7 : 1,
+                    }}>
+                      {updatingStaffId === s.id ? <Spinner size="sm" /> : (s.is_active ? 'Deactivate' : 'Activate')}
+                    </button>
                   )}
                 </td>
               </tr>

@@ -180,7 +180,7 @@ export default function PreordersPage() {
         </div>
       ) : (
         <>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '1rem' }}>
             {preorders.map((p, i) => {
               const reservation = p.reservation as Reservation;
               const product = reservation?.product as Product;
