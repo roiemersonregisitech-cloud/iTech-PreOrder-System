@@ -16,52 +16,18 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { inventory_id, branch_id, product_id, qty_on_hand, qty_reserved, central_qty } = body;
+    const { product_id, central_qty } = body;
 
-    if (!product_id || qty_on_hand === undefined || qty_reserved === undefined || central_qty === undefined) {
+    if (!product_id || central_qty === undefined) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
       );
     }
 
-    if (qty_on_hand < 0) return NextResponse.json({ error: 'qty_on_hand cannot be negative' }, { status: 400 });
-    if (qty_reserved < 0) return NextResponse.json({ error: 'qty_reserved cannot be negative' }, { status: 400 });
+    if (central_qty < 0) return NextResponse.json({ error: 'central_qty cannot be negative' }, { status: 400 });
 
     const supabase = await createServiceClient();
-
-    // 1. Update Inventory row (if branch_id is provided, which it should be if editing a branch row)
-    if (inventory_id && branch_id) {
-      const { error: invError } = await supabase
-        .from('inventory')
-        .update({
-          qty_on_hand,
-          qty_reserved,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', inventory_id);
-
-      if (invError) {
-        console.error('Super adjust inventory error:', invError);
-        return NextResponse.json({ error: 'Failed to update branch inventory' }, { status: 500 });
-      }
-    } else if (branch_id) {
-      // Upsert if not exists
-      const { error: invError } = await supabase
-        .from('inventory')
-        .upsert({
-          branch_id,
-          product_id,
-          qty_on_hand,
-          qty_reserved,
-          updated_at: new Date().toISOString(),
-        });
-        
-      if (invError) {
-        console.error('Super adjust inventory error:', invError);
-        return NextResponse.json({ error: 'Failed to create branch inventory' }, { status: 500 });
-      }
-    }
 
     // 2. Update Product central_qty
     const { error: prodError } = await supabase
@@ -82,8 +48,8 @@ export async function POST(request: NextRequest) {
       userId: session.userId,
       action: 'inventory.super_adjust',
       entityType: 'inventory',
-      entityId: inventory_id || product_id,
-      metadata: { branch_id, product_id, qty_on_hand, qty_reserved, central_qty },
+      entityId: product_id,
+      metadata: { product_id, central_qty },
       request,
     });
 

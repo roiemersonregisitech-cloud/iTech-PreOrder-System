@@ -70,9 +70,10 @@ interface ModalProps {
   onClose: () => void;
   title: string;
   children: React.ReactNode;
+  maxWidth?: string;
 }
 
-export function Modal({ isOpen, onClose, title, children }: ModalProps) {
+export function Modal({ isOpen, onClose, title, children, maxWidth = '480px' }: ModalProps) {
   if (!isOpen) return null;
 
   return (
@@ -85,8 +86,9 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div className="glass-card animate-fade-in" style={{
-        width: '100%', maxWidth: '480px', margin: '1rem',
+        width: '100%', maxWidth, margin: '1rem',
         padding: '1.5rem',
+        maxHeight: '90vh', overflowY: 'auto'
       }}>
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',

@@ -431,7 +431,7 @@ export default function ReservationsPage() {
       )}
 
       {/* Reserve Form Modal */}
-      <Modal isOpen={showReserveForm} onClose={() => { setShowReserveForm(false); setSelectedProduct(''); setProductSearch(''); }} title="New Reservation">
+      <Modal isOpen={showReserveForm} onClose={() => { setShowReserveForm(false); setSelectedProduct(''); setProductSearch(''); }} title="New Reservation" maxWidth="800px">
         <div>
           {/* Branch Selector */}
           <div style={{ marginBottom: '1rem' }}>

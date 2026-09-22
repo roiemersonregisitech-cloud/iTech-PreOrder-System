@@ -414,23 +414,15 @@ export default function InventoryPage() {
   async function handleSuperEdit() {
     if (!editModal) return;
     setEditError('');
-    const onHand = parseInt(editOnHand);
-    const reserved = parseInt(editReserved);
     const central = parseInt(editCentral);
 
-    if (isNaN(onHand) || onHand < 0) return setEditError('Qty on hand must be >= 0');
-    if (isNaN(reserved) || reserved < 0) return setEditError('Qty reserved must be >= 0');
-    if (isNaN(central)) return setEditError('Central qty must be a valid number');
+    if (isNaN(central) || central < 0) return setEditError('Central qty must be >= 0');
 
     const res = await fetch('/api/inventory/adjust', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        inventory_id: editModal.row.id,
-        branch_id: editModal.row.branch_id,
         product_id: editModal.product.id,
-        qty_on_hand: onHand,
-        qty_reserved: reserved,
         central_qty: central,
       }),
     });
@@ -734,50 +726,54 @@ export default function InventoryPage() {
                                 </td>
                                   <td style={{ padding: '0.66rem 1.25rem' }}>
                                     <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                      <button
-                                        id={`reclaim-btn-${row.id}`}
-                                        onClick={e => {
-                                          e.stopPropagation();
-                                          setReclaimItem(row);
-                                          setReclaimQty('1');
-                                          setReclaimError('');
-                                        }}
-                                        style={{
-                                          padding: '0.25rem 0.5rem',
-                                          borderRadius: 'var(--radius-sm)',
-                                          background: 'rgba(239, 68, 68, 0.1)',
-                                          border: '1px solid rgba(239, 68, 68, 0.3)',
-                                          color: 'var(--accent-danger)',
-                                          fontSize: '0.75rem',
-                                          cursor: 'pointer',
-                                          fontWeight: 500,
-                                        }}
-                                      >
-                                        Reclaim to Central
-                                      </button>
-                                      <button
-                                        id={`edit-btn-${row.id}`}
-                                        onClick={e => {
-                                          e.stopPropagation();
-                                          setEditModal({ row, product: group.product });
-                                          setEditOnHand(row.qty_on_hand.toString());
-                                          setEditReserved(row.qty_reserved.toString());
-                                          setEditCentral(group.product.central_qty.toString());
-                                          setEditError('');
-                                        }}
-                                        style={{
-                                          padding: '0.25rem 0.5rem',
-                                          borderRadius: 'var(--radius-sm)',
-                                          background: 'rgba(59, 130, 246, 0.1)',
-                                          border: '1px solid rgba(59, 130, 246, 0.3)',
-                                          color: '#3b82f6',
-                                          fontSize: '0.75rem',
-                                          cursor: 'pointer',
-                                          fontWeight: 500,
-                                        }}
-                                      >
-                                        Edit
-                                      </button>
+                                      {isSuperAdmin && (
+                                        <>
+                                          <button
+                                            id={`reclaim-btn-${row.id}`}
+                                            onClick={e => {
+                                              e.stopPropagation();
+                                              setReclaimItem(row);
+                                              setReclaimQty('1');
+                                              setReclaimError('');
+                                            }}
+                                            style={{
+                                              padding: '0.25rem 0.5rem',
+                                              borderRadius: 'var(--radius-sm)',
+                                              background: 'rgba(239, 68, 68, 0.1)',
+                                              border: '1px solid rgba(239, 68, 68, 0.3)',
+                                              color: 'var(--accent-danger)',
+                                              fontSize: '0.75rem',
+                                              cursor: 'pointer',
+                                              fontWeight: 500,
+                                            }}
+                                          >
+                                            Reclaim to Central
+                                          </button>
+                                          <button
+                                            id={`edit-btn-${row.id}`}
+                                            onClick={e => {
+                                              e.stopPropagation();
+                                              setEditModal({ row, product: group.product });
+                                              setEditOnHand(row.qty_on_hand.toString());
+                                              setEditReserved(row.qty_reserved.toString());
+                                              setEditCentral(group.product.central_qty.toString());
+                                              setEditError('');
+                                            }}
+                                            style={{
+                                              padding: '0.25rem 0.5rem',
+                                              borderRadius: 'var(--radius-sm)',
+                                              background: 'rgba(59, 130, 246, 0.1)',
+                                              border: '1px solid rgba(59, 130, 246, 0.3)',
+                                              color: '#3b82f6',
+                                              fontSize: '0.75rem',
+                                              cursor: 'pointer',
+                                              fontWeight: 500,
+                                            }}
+                                          >
+                                            Edit
+                                          </button>
+                                        </>
+                                      )}
                                     </div>
                                   </td>
                               </tr>
@@ -1153,28 +1149,8 @@ export default function InventoryPage() {
             Warning: This directly modifies inventory data without generating standard allocation logs.
             Use only for correcting human errors or syncing physical counts.
           </p>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '0.75rem' }}>
             <div>
-              <label style={labelStyle}>Qty On Hand (Branch)</label>
-              <input
-                type="number"
-                min="0"
-                value={editOnHand}
-                onChange={e => setEditOnHand(e.target.value)}
-                style={inputStyle}
-              />
-            </div>
-            <div>
-              <label style={labelStyle}>Qty Reserved (Branch)</label>
-              <input
-                type="number"
-                min="0"
-                value={editReserved}
-                onChange={e => setEditReserved(e.target.value)}
-                style={inputStyle}
-              />
-            </div>
-            <div style={{ gridColumn: '1 / -1' }}>
               <label style={labelStyle}>Central Warehouse Qty</label>
               <input
                 type="number"
@@ -1209,7 +1185,7 @@ export default function InventoryPage() {
               loadingLabel="Saving…"
               variant="primary"
               onClick={handleSuperEdit}
-              disabled={!editModal || !editOnHand || !editReserved || !editCentral}
+              disabled={!editModal || !editCentral}
             />
           </div>
         </div>
