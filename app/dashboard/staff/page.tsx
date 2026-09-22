@@ -161,7 +161,7 @@ export default function StaffPage() {
                       fontSize: '0.75rem', cursor: updatingStaffId === s.id ? 'not-allowed' : 'pointer', fontWeight: 600,
                       opacity: updatingStaffId === s.id ? 0.7 : 1,
                     }}>
-                      {updatingStaffId === s.id ? <Spinner size="sm" /> : (s.is_active ? 'Deactivate' : 'Activate')}
+                      {updatingStaffId === s.id ? <Spinner size={14} /> : (s.is_active ? 'Deactivate' : 'Activate')}
                     </button>
                   )}
                 </td>
