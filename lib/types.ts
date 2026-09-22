@@ -93,6 +93,27 @@ export interface Preorder {
   branch?: Branch;
 }
 
+export interface DeliveredItem {
+  id: string;
+  preorder_id: string;
+  reservation_id: string;
+  branch_id: string;
+  product_id: string;
+  qty: number;
+  sales_order_number: string;
+  delivered_by: string;
+  delivered_at: string;
+  customer_name: string | null;
+  customer_contact: string | null;
+  preorder_code: string;
+  downpayment_amount: number;
+  created_at: string;
+  // Joined
+  branch?: Branch;
+  product?: Product;
+  staff?: Staff;
+}
+
 export interface AllocationRequest {
   id: string;
   branch_id: string;

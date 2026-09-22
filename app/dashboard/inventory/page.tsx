@@ -10,6 +10,13 @@ interface GroupedProduct {
   totalOnHand: number;
   totalReserved: number;
   totalAvailable: number;
+  totalDelivered: number;
+}
+
+interface DeliveredCount {
+  product_id: string;
+  branch_id: string;
+  total_qty: number;
 }
 
 interface TransferDestination {
@@ -55,23 +62,29 @@ export default function InventoryPage() {
   const [reclaimQty, setReclaimQty] = useState('');
   const [reclaimError, setReclaimError] = useState('');
 
+  // Delivered counts per product+branch
+  const [deliveredCounts, setDeliveredCounts] = useState<DeliveredCount[]>([]);
+
   const fetchInventoryData = useCallback(async () => {
     const params = search ? `?search=${encodeURIComponent(search)}` : '';
-    const [invRes, prodRes, branchRes] = await Promise.all([
+    const [invRes, prodRes, branchRes, delRes] = await Promise.all([
       fetch(`/api/inventory${params}`),
       fetch('/api/products'),
       fetch('/api/branches'),
+      fetch('/api/inventory/delivered-counts'),
     ]);
 
-    const [invData, prodData, branchData] = await Promise.all([
+    const [invData, prodData, branchData, delData] = await Promise.all([
       invRes.json(),
       prodRes.json(),
       branchRes.json(),
+      delRes.json(),
     ]);
 
     if (invRes.ok) setInventory(invData.data || []);
     if (prodRes.ok) setProducts(prodData.data || []);
     if (branchRes.ok) setBranches(branchData.data || []);
+    if (delRes.ok) setDeliveredCounts(delData.data || []);
   }, [search]);
 
   const initialized = useRef(false);
@@ -105,6 +118,23 @@ export default function InventoryPage() {
 
   const isSuperAdmin = userRole === 'super_admin';
 
+  // Build a lookup for delivered counts per product and per product+branch
+  const deliveredByProduct = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const dc of deliveredCounts) {
+      map.set(dc.product_id, (map.get(dc.product_id) || 0) + dc.total_qty);
+    }
+    return map;
+  }, [deliveredCounts]);
+
+  const deliveredByProductBranch = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const dc of deliveredCounts) {
+      map.set(`${dc.product_id}:${dc.branch_id}`, dc.total_qty);
+    }
+    return map;
+  }, [deliveredCounts]);
+
   // Group inventory rows by product
   const grouped: GroupedProduct[] = useMemo(() => {
     const map = new Map<string, GroupedProduct>();
@@ -117,6 +147,7 @@ export default function InventoryPage() {
         totalOnHand: 0,
         totalReserved: 0,
         totalAvailable: 0,
+        totalDelivered: deliveredByProduct.get(prod.id) || 0,
       });
     }
 
@@ -137,12 +168,13 @@ export default function InventoryPage() {
           totalOnHand: row.qty_on_hand,
           totalReserved: row.qty_reserved,
           totalAvailable: row.qty_on_hand - row.qty_reserved,
+          totalDelivered: deliveredByProduct.get(product.id) || 0,
         });
       }
     }
 
     return Array.from(map.values());
-  }, [inventory, products]);
+  }, [inventory, products, deliveredByProduct]);
 
   // Helper to get available stock for a specific branch & product
   const getBranchAvailable = (branchId: string, productId: string) => {
@@ -519,6 +551,11 @@ export default function InventoryPage() {
                         {group.totalAvailable}
                       </span>
                     </div>
+
+                    <div style={{ textAlign: 'center', padding: '0.3rem 0.6rem', borderRadius: 'var(--radius-md)', background: 'rgba(168, 85, 247, 0.08)' }}>
+                      <div style={{ fontSize: '0.65rem', fontWeight: 700, color: '#a855f7', textTransform: 'uppercase' }}>Delivered</div>
+                      <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#a855f7' }}>{group.totalDelivered}</div>
+                    </div>
                   </div>
                 </div>
 
@@ -528,7 +565,7 @@ export default function InventoryPage() {
                     <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
                       <thead>
                         <tr style={{ borderBottom: '1px solid var(--border-secondary)' }}>
-                          {['Branch', 'On Hand', 'Reserved', 'Available', 'Last Updated', ...(isSuperAdmin ? ['Actions'] : [])].map(h => (
+                          {['Branch', 'On Hand', 'Reserved', 'Available', 'Delivered', 'Last Updated', ...(isSuperAdmin ? ['Actions'] : [])].map(h => (
                             <th key={h} style={{ padding: '0.6rem 1.25rem', textAlign: 'left', color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.7rem', textTransform: 'uppercase' }}>{h}</th>
                           ))}
                         </tr>
@@ -536,7 +573,7 @@ export default function InventoryPage() {
                       <tbody>
                         {group.rows.length === 0 ? (
                           <tr>
-                            <td colSpan={6} style={{ padding: '1rem 1.25rem', color: 'var(--text-muted)' }}>
+                            <td colSpan={7} style={{ padding: '1rem 1.25rem', color: 'var(--text-muted)' }}>
                               No branch allocations yet for this product. Use &quot;Allocate to Branch&quot; to assign stock from Central Inventory.
                             </td>
                           </tr>
@@ -544,6 +581,7 @@ export default function InventoryPage() {
                           group.rows.map(row => {
                             const branch = row.branch as Branch;
                             const available = row.qty_on_hand - row.qty_reserved;
+                            const branchDelivered = deliveredByProductBranch.get(`${(row.product as Product)?.id}:${row.branch_id}`) || 0;
 
                             return (
                               <tr key={row.id} style={{ borderBottom: '1px solid var(--border-secondary)' }}>
@@ -554,6 +592,9 @@ export default function InventoryPage() {
                                 <td style={{ padding: '0.66rem 1.25rem', color: row.qty_reserved > 0 ? 'var(--accent-warning)' : 'var(--text-muted)' }}>{row.qty_reserved}</td>
                                 <td style={{ padding: '0.66rem 1.25rem' }}>
                                   <span style={{ fontWeight: 700, color: 'var(--accent-success)' }}>{available}</span>
+                                </td>
+                                <td style={{ padding: '0.66rem 1.25rem' }}>
+                                  <span style={{ fontWeight: 600, color: branchDelivered > 0 ? '#a855f7' : 'var(--text-muted)' }}>{branchDelivered}</span>
                                 </td>
                                 <td style={{ padding: '0.66rem 1.25rem', color: 'var(--text-muted)', fontSize: '0.75rem' }}>
                                   {new Date(row.updated_at).toLocaleString()}
