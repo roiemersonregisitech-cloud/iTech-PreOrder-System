@@ -218,18 +218,6 @@ export default function ProductsPage() {
     fetchProducts();
   }
 
-  if (loading) {
-    return (
-      <div className="animate-fade-in">
-        <div style={{ marginBottom: '1.5rem' }}>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-heading)' }}>Products</h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Loading catalog items…</p>
-        </div>
-        <SkeletonTable rows={6} columns={5} />
-      </div>
-    );
-  }
-
   const inputStyle: React.CSSProperties = {
     width: '100%',
     padding: '0.6rem 0.8rem',
@@ -260,12 +248,14 @@ export default function ProductsPage() {
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search products or SKU…"
-            style={{ ...inputStyle, width: '220px', marginBottom: 0 }}
+            disabled={loading}
+            style={{ ...inputStyle, width: '220px', marginBottom: 0, opacity: loading ? 0.7 : 1 }}
           />
           {isSuperAdmin && (
             <button
               id="create-product-btn"
               onClick={() => setShowCreate(true)}
+              disabled={loading}
               style={{
                 padding: '0.6rem 1rem',
                 borderRadius: 'var(--radius-md)',
@@ -274,11 +264,12 @@ export default function ProductsPage() {
                 border: 'none',
                 fontSize: '0.85rem',
                 fontWeight: 600,
-                cursor: 'pointer',
+                cursor: loading ? 'not-allowed' : 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '0.4rem',
                 whiteSpace: 'nowrap',
+                opacity: loading ? 0.7 : 1
               }}
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -288,7 +279,9 @@ export default function ProductsPage() {
         </div>
       </div>
 
-      {/* Product Table */}
+      {loading ? (
+        <SkeletonTable rows={6} columns={5} />
+      ) : (
       <div className="glass-card responsive-table-wrapper" style={{ overflow: 'hidden', padding: '1rem' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
           <thead>
@@ -395,6 +388,7 @@ export default function ProductsPage() {
           pageSizeOptions={[5, 10, 20, 50]}
         />
       </div>
+      )}
 
       {/* Create Modal */}
       <Modal isOpen={showCreate} onClose={() => setShowCreate(false)} title="Add New Product">

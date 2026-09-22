@@ -87,17 +87,6 @@ export default function PreordersPage() {
   }
 
   if (loading) {
-    return (
-      <div className="animate-fade-in">
-        <div style={{ marginBottom: '1.5rem' }}>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-heading)' }}>Preorders</h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Loading confirmed preorders…</p>
-        </div>
-        <SkeletonCard count={6} />
-      </div>
-    );
-  }
-
   const totalPages = Math.ceil(totalItems / pageSize);
 
   return (
@@ -112,22 +101,25 @@ export default function PreordersPage() {
       <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
         <input id="preorder-search" type="text" value={search} onChange={e => { setSearch(e.target.value); setPage(1); }}
           placeholder="Search by preorder code…"
+          disabled={loading}
           style={{ flex: '1 1 280px', padding: '0.6rem 0.8rem', background: 'var(--bg-input)', border: '1px solid var(--border-primary)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontSize: '0.85rem', outline: 'none' }}
         />
         <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
           {['', 'active', 'fulfilled', 'cancelled'].map(s => (
-            <button key={s} onClick={() => { setStatusFilter(s); setPage(1); }} style={{
+            <button key={s} onClick={() => { setStatusFilter(s); setPage(1); }} disabled={loading} style={{
               padding: '0.4rem 0.8rem', borderRadius: '9999px',
               background: statusFilter === s ? 'var(--accent-primary)' : 'var(--bg-tertiary)',
               color: statusFilter === s ? 'white' : 'var(--text-secondary)',
               border: statusFilter === s ? 'none' : '1px solid var(--border-primary)',
-              fontSize: '0.8rem', fontWeight: 500, cursor: 'pointer', textTransform: 'capitalize',
+              fontSize: '0.8rem', fontWeight: 500, cursor: loading ? 'not-allowed' : 'pointer', textTransform: 'capitalize',
             }}>{s || 'All'}</button>
           ))}
         </div>
       </div>
 
-      {preorders.length === 0 ? (
+      {loading ? (
+        <SkeletonCard count={6} />
+      ) : preorders.length === 0 ? (
         <div className="glass-card" style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
           No preorders found
         </div>

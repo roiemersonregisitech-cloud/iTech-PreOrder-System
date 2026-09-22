@@ -47,18 +47,6 @@ export default function BranchesPage() {
     fetchBranches();
   }
 
-  if (loading) {
-    return (
-      <div className="animate-fade-in">
-        <div style={{ marginBottom: '1.5rem' }}>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-heading)' }}>Branches</h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Loading store locations…</p>
-        </div>
-        <SkeletonCard count={4} />
-      </div>
-    );
-  }
-
   const inputStyle: React.CSSProperties = {
     width: '100%', padding: '0.6rem 0.8rem',
     background: 'var(--bg-input)', border: '1px solid var(--border-primary)',
@@ -76,17 +64,21 @@ export default function BranchesPage() {
           <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-heading)' }}>Branches</h1>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Manage retail branch locations</p>
         </div>
-        <button id="create-branch-btn" onClick={() => setShowCreate(true)} style={{
+        <button id="create-branch-btn" onClick={() => setShowCreate(true)} disabled={loading} style={{
           padding: '0.625rem 1.25rem', borderRadius: 'var(--radius-md)',
           background: 'var(--gradient-primary)', color: 'white', border: 'none',
-          fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer',
+          fontSize: '0.85rem', fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer',
           display: 'flex', alignItems: 'center', gap: '0.5rem',
+          opacity: loading ? 0.7 : 1
         }}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           Add Branch
         </button>
       </div>
 
+      {loading ? (
+        <SkeletonCard count={4} />
+      ) : (
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
         {paginatedBranches.map((b, i) => (
           <div key={b.id} className="glass-card" style={{ padding: '1.25rem', animation: `fadeIn ${150 + i * 50}ms ease-out` }}>
@@ -105,6 +97,7 @@ export default function BranchesPage() {
           </div>
         ))}
       </div>
+      )}
 
       <Pagination
         currentPage={page}

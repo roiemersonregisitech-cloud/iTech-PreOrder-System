@@ -345,17 +345,6 @@ export default function InventoryPage() {
     marginBottom: '0.3rem',
   };
 
-  if (loading) {
-    return (
-      <div className="animate-fade-in">
-        <div style={{ marginBottom: '1.5rem' }}>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-heading)' }}>Inventory</h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Loading inventory balances…</p>
-        </div>
-        <SkeletonCard count={5} />
-      </div>
-    );
-  }
 
   // Transfer Math Live Prediction
   const activeTransferProduct = products.find(p => p.id === transferProductId);
@@ -385,7 +374,8 @@ export default function InventoryPage() {
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search products or SKU…"
-            style={{ ...inputStyle, width: '220px', marginBottom: 0 }}
+            disabled={loading}
+            style={{ ...inputStyle, width: '220px', marginBottom: 0, opacity: loading ? 0.7 : 1 }}
           />
 
           {isSuperAdmin && (
@@ -396,6 +386,7 @@ export default function InventoryPage() {
                   setCentralProductId(products[0]?.id || '');
                   setShowAddCentral(true);
                 }}
+                disabled={loading}
                 style={{
                   padding: '0.55rem 0.9rem',
                   borderRadius: 'var(--radius-md)',
@@ -404,8 +395,9 @@ export default function InventoryPage() {
                   border: 'none',
                   fontSize: '0.85rem',
                   fontWeight: 600,
-                  cursor: 'pointer',
+                  cursor: loading ? 'not-allowed' : 'pointer',
                   whiteSpace: 'nowrap',
+                  opacity: loading ? 0.7 : 1
                 }}
               >
                 + Add Central Stock
@@ -418,6 +410,7 @@ export default function InventoryPage() {
                   setAllocBranchId(branches[0]?.id || '');
                   setShowAllocateCentral(true);
                 }}
+                disabled={loading}
                 style={{
                   padding: '0.55rem 0.9rem',
                   borderRadius: 'var(--radius-md)',
@@ -426,8 +419,9 @@ export default function InventoryPage() {
                   color: 'var(--text-primary)',
                   fontSize: '0.85rem',
                   fontWeight: 600,
-                  cursor: 'pointer',
+                  cursor: loading ? 'not-allowed' : 'pointer',
                   whiteSpace: 'nowrap',
+                  opacity: loading ? 0.7 : 1
                 }}
               >
                 Allocate to Branch
@@ -463,7 +457,9 @@ export default function InventoryPage() {
 
       {/* Product List */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-        {grouped.length === 0 ? (
+        {loading ? (
+        <SkeletonCard count={5} />
+      ) : grouped.length === 0 ? (
           <div className="glass-card" style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
             No products or inventory items found
           </div>

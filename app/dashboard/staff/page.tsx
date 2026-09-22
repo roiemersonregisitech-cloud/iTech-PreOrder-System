@@ -72,18 +72,6 @@ export default function StaffPage() {
     fetchStaff();
   }
 
-  if (loading) {
-    return (
-      <div className="animate-fade-in">
-        <div style={{ marginBottom: '1.5rem' }}>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-heading)' }}>Staff Management</h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Loading system users…</p>
-        </div>
-        <SkeletonTable rows={5} columns={5} />
-      </div>
-    );
-  }
-
   const roleBadge = (role: string) => {
     const colors: Record<string, string> = { cashier: 'var(--accent-info)', branch_admin: 'var(--accent-warning)', super_admin: 'var(--accent-danger)' };
     return <span style={{ color: colors[role] || 'var(--text-muted)', fontWeight: 600, fontSize: '0.75rem', textTransform: 'uppercase' }}>{role.replace('_', ' ')}</span>;
@@ -111,17 +99,21 @@ export default function StaffPage() {
           <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-heading)' }}>Staff</h1>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Manage user accounts</p>
         </div>
-        <button id="create-staff-btn" onClick={() => setShowCreate(true)} style={{
+        <button id="create-staff-btn" onClick={() => setShowCreate(true)} disabled={loading} style={{
           padding: '0.625rem 1.25rem', borderRadius: 'var(--radius-md)',
           background: 'var(--gradient-primary)', color: 'white', border: 'none',
-          fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer',
+          fontSize: '0.85rem', fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer',
           display: 'flex', alignItems: 'center', gap: '0.5rem',
+          opacity: loading ? 0.7 : 1
         }}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           Add Staff
         </button>
       </div>
 
+      {loading ? (
+        <SkeletonTable rows={5} columns={5} />
+      ) : (
       <div className="glass-card responsive-table-wrapper" style={{ overflow: 'hidden', padding: '1rem' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
           <thead>
@@ -163,6 +155,7 @@ export default function StaffPage() {
           pageSizeOptions={[5, 10, 20, 50]}
         />
       </div>
+      )}
 
       <Modal isOpen={showCreate} onClose={() => setShowCreate(false)} title="Create Staff Account">
         <div>

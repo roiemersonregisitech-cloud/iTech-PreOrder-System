@@ -54,18 +54,6 @@ export default function AuditLogPage() {
 
   const totalPages = Math.ceil(total / pageSize);
 
-  if (loading) {
-    return (
-      <div className="animate-fade-in">
-        <div style={{ marginBottom: '1.5rem' }}>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-heading)' }}>Audit Log</h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Loading system activity trail…</p>
-        </div>
-        <SkeletonTable rows={8} columns={4} />
-      </div>
-    );
-  }
-
   const actionColor = (action: string): string => {
     if (action.includes('create') || action.includes('confirm') || action.includes('login')) return 'var(--accent-success)';
     if (action.includes('cancel') || action.includes('deactivate') || action.includes('expire')) return 'var(--accent-danger)';
@@ -88,16 +76,19 @@ export default function AuditLogPage() {
 
       {/* Filters */}
       <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
-        <select id="audit-action-filter" value={actionFilter} onChange={e => { setActionFilter(e.target.value); setPage(1); }} style={selectStyle}>
+        <select id="audit-action-filter" value={actionFilter} onChange={e => { setActionFilter(e.target.value); setPage(1); }} disabled={loading} style={{...selectStyle, opacity: loading ? 0.7 : 1}}>
           <option value="">All Actions</option>
           {ACTION_OPTIONS.filter(Boolean).map(a => <option key={a} value={a}>{a}</option>)}
         </select>
-        <input id="audit-date-from" type="date" value={dateFrom} onChange={e => { setDateFrom(e.target.value); setPage(1); }} style={selectStyle} />
-        <input id="audit-date-to" type="date" value={dateTo} onChange={e => { setDateTo(e.target.value); setPage(1); }} style={selectStyle} />
+        <input id="audit-date-from" type="date" value={dateFrom} onChange={e => { setDateFrom(e.target.value); setPage(1); }} disabled={loading} style={{...selectStyle, opacity: loading ? 0.7 : 1}} />
+        <input id="audit-date-to" type="date" value={dateTo} onChange={e => { setDateTo(e.target.value); setPage(1); }} disabled={loading} style={{...selectStyle, opacity: loading ? 0.7 : 1}} />
         <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{total} entries</span>
       </div>
 
       {/* Log Entries */}
+      {loading ? (
+        <SkeletonTable rows={8} columns={4} />
+      ) : (
       <div className="glass-card" style={{ overflow: 'hidden' }}>
         <div className="responsive-table-wrapper" style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
@@ -152,6 +143,7 @@ export default function AuditLogPage() {
           pageSizeOptions={[10, 20, 30, 50, 100]}
         />
       </div>
+      )}
     </div>
   );
 }

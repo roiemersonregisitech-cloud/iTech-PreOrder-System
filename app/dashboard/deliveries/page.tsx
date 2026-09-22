@@ -45,18 +45,6 @@ export default function DeliveriesPage() {
     fetchDeliveries();
   }, [search, fetchDeliveries]);
 
-  if (loading) {
-    return (
-      <div className="animate-fade-in">
-        <div style={{ marginBottom: '1.5rem' }}>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-heading)' }}>Deliveries</h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Loading delivery history…</p>
-        </div>
-        <SkeletonCard count={6} />
-      </div>
-    );
-  }
-
   const totalPages = Math.ceil(totalItems / pageSize);
 
   // Summary stats
@@ -100,17 +88,20 @@ export default function DeliveriesPage() {
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder="Search by Sales Order, Preorder Code, or Customer…"
+          disabled={loading}
           style={{
             width: '100%', maxWidth: '480px', padding: '0.6rem 0.8rem',
             background: 'var(--bg-input)', border: '1px solid var(--border-primary)',
             borderRadius: 'var(--radius-md)', color: 'var(--text-primary)',
-            fontSize: '0.85rem', outline: 'none',
+            fontSize: '0.85rem', outline: 'none', opacity: loading ? 0.7 : 1
           }}
         />
       </div>
 
       {/* Deliveries Grid */}
-      {deliveries.length === 0 ? (
+      {loading ? (
+        <SkeletonCard count={6} />
+      ) : deliveries.length === 0 ? (
         <div className="glass-card" style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
           <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ margin: '0 auto 1rem', opacity: 0.3 }}>
             <circle cx="12" cy="12" r="10"/><path d="M8 12h8"/>

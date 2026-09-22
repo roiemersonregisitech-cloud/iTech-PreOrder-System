@@ -220,18 +220,6 @@ export default function ReservationsPage() {
      p.sku.toLowerCase().includes(productSearch.toLowerCase()))
   );
 
-  if (loading) {
-    return (
-      <div className="animate-fade-in">
-        <div style={{ marginBottom: '1.5rem' }}>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-heading)' }}>Reservations</h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Loading pending inventory locks…</p>
-        </div>
-        <SkeletonCard count={6} />
-      </div>
-    );
-  }
-
   const totalPages = Math.ceil(totalItems / pageSize);
 
   return (
@@ -245,11 +233,13 @@ export default function ReservationsPage() {
         <button
           id="new-reservation-btn"
           onClick={() => setShowReserveForm(true)}
+          disabled={loading}
           style={{
             padding: '0.625rem 1.25rem', borderRadius: 'var(--radius-md)',
             background: 'var(--gradient-primary)', color: 'white', border: 'none',
-            fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer',
+            fontSize: '0.85rem', fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer',
             display: 'flex', alignItems: 'center', gap: '0.5rem',
+            opacity: loading ? 0.7 : 1
           }}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -264,14 +254,16 @@ export default function ReservationsPage() {
             key={s}
             id={`filter-${s || 'all'}`}
             onClick={() => { setStatusFilter(s); setPage(1); }}
+            disabled={loading}
             style={{
               padding: '0.4rem 0.9rem', borderRadius: '9999px',
               background: statusFilter === s ? 'var(--accent-primary)' : 'var(--bg-tertiary)',
               color: statusFilter === s ? 'white' : 'var(--text-secondary)',
               border: statusFilter === s ? 'none' : '1px solid var(--border-primary)',
-              fontSize: '0.8rem', fontWeight: 500, cursor: 'pointer',
+              fontSize: '0.8rem', fontWeight: 500, cursor: loading ? 'not-allowed' : 'pointer',
               transition: 'all var(--transition-fast)',
               textTransform: 'capitalize',
+              opacity: loading ? 0.7 : 1
             }}
           >
             {s || 'All'}
@@ -280,7 +272,9 @@ export default function ReservationsPage() {
       </div>
 
       {/* Reservation Cards */}
-      {reservations.length === 0 ? (
+      {loading ? (
+        <SkeletonCard count={6} />
+      ) : reservations.length === 0 ? (
         <div className="glass-card" style={{
           padding: '3rem', textAlign: 'center', color: 'var(--text-muted)',
         }}>

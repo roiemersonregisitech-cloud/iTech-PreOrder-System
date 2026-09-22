@@ -270,17 +270,7 @@ export default function AllocationsPage() {
     fetchData();
   }
 
-  if (loading) {
-    return (
-      <div className="animate-fade-in">
-        <div style={{ marginBottom: "1.5rem" }}>
-          <h1 style={{ fontSize: "1.5rem", fontWeight: 800, color: "var(--text-heading)" }}>Allocations</h1>
-          <p style={{ color: "var(--text-muted)", fontSize: "0.85rem" }}>Loading stock requests and inventory allocations…</p>
-        </div>
-        <SkeletonTable rows={6} columns={6} />
-      </div>
-    );
-  }
+
 
   // Calculate live math prediction for Approval Modal
   const activeReq = actionModal?.request;
@@ -384,6 +374,7 @@ export default function AllocationsPage() {
             <button
               id="direct-allocation-btn"
               onClick={() => setShowDirectModal(true)}
+              disabled={loading}
               style={{
                 padding: "0.6rem 1rem",
                 borderRadius: "var(--radius-md)",
@@ -392,7 +383,8 @@ export default function AllocationsPage() {
                 color: "var(--text-primary)",
                 fontSize: "0.85rem",
                 fontWeight: 600,
-                cursor: "pointer",
+                cursor: loading ? 'not-allowed' : 'pointer',
+                opacity: loading ? 0.7 : 1
               }}
             >
               Direct Stock Adjustment
@@ -463,6 +455,10 @@ export default function AllocationsPage() {
         </select>
       </div>
 
+      {loading ? (
+        <SkeletonTable rows={6} columns={6} />
+      ) : (
+      <>
       {/* Request Cards */}
       <div style={{ marginBottom: "2rem" }}>
         <h2
@@ -839,6 +835,8 @@ export default function AllocationsPage() {
           </>
         )}
       </div>
+      </>
+      )}
 
       {/* Request Stock Modal */}
       <Modal
