@@ -300,8 +300,16 @@ export default function InventoryPage() {
       }
     }
 
-    return Array.from(map.values());
-  }, [inventory, products, deliveredByProduct]);
+    let result = Array.from(map.values());
+    if (search) {
+      const searchTerms = search.toLowerCase().split(/\s+/).filter(Boolean);
+      result = result.filter(g => {
+        const target = `${g.product.name} ${g.product.sku}`.toLowerCase();
+        return searchTerms.every(term => target.includes(term));
+      });
+    }
+    return result;
+  }, [inventory, products, deliveredByProduct, search]);
 
   // Helper to get available stock for a specific branch & product
   const getBranchAvailable = (branchId: string, productId: string) => {
@@ -595,7 +603,7 @@ export default function InventoryPage() {
           </div>
         ) : (
           paginatedGrouped.map((group, i) => {
-            const isExpanded = expandedProductId === group.product.id;
+            const isExpanded = !isSuperAdmin || expandedProductId === group.product.id;
 
             return (
               <div
@@ -610,7 +618,7 @@ export default function InventoryPage() {
                 <div
                   id={`product-row-${group.product.id}`}
                   className="inventory-product-row"
-                  onClick={() => toggleExpand(group.product.id)}
+                  onClick={() => isSuperAdmin && toggleExpand(group.product.id)}
                   style={{
                     display: 'grid',
                     gridTemplateColumns: '1fr auto',
@@ -622,12 +630,22 @@ export default function InventoryPage() {
                 >
                   {/* Left: Product info */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', minWidth: 0 }}>
-                    <svg
-                      width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2.5"
-                      style={{ transition: 'transform 0.2s ease', transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)', flexShrink: 0 }}
-                    >
-                      <polyline points="9 18 15 12 9 6" />
-                    </svg>
+                    {isSuperAdmin && (
+                      <svg
+                        width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2.5"
+                        style={{ transition: 'transform 0.2s ease', transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)', flexShrink: 0 }}
+                      >
+                        <polyline points="9 18 15 12 9 6" />
+                      </svg>
+                    )}
+
+                    <div style={{ width: '40px', height: '40px', borderRadius: '4px', background: 'var(--bg-tertiary)', overflow: 'hidden', flexShrink: 0 }}>
+                      {group.product.image_url ? (
+                        <img src={group.product.image_url} alt={group.product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      ) : (
+                        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', opacity: 0.5 }}>📦</div>
+                      )}
+                    </div>
 
                     <div style={{ minWidth: 0 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>

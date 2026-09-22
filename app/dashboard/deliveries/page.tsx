@@ -110,7 +110,7 @@ export default function DeliveriesPage() {
         </div>
       ) : (
         <>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '1rem' }}>
             {deliveries.map((d, i) => {
               const product = d.product as Product | undefined;
               const branch = d.branch as Branch | undefined;
