@@ -139,6 +139,96 @@ function ProductPicker({
   );
 }
 
+function BranchPicker({
+  selectedBranchId,
+  setSelectedBranchId,
+  branches,
+  placeholder = "Search branch name or code...",
+  excludeBranchIds = [],
+  renderOptionExtra,
+}: {
+  selectedBranchId: string;
+  setSelectedBranchId: (id: string) => void;
+  branches: Branch[];
+  placeholder?: string;
+  excludeBranchIds?: string[];
+  renderOptionExtra?: (branchId: string) => React.ReactNode;
+  style?: React.CSSProperties;
+}) {
+  const [search, setSearch] = useState('');
+  const [isOpen, setIsOpen] = useState(false);
+
+  const availableBranches = branches.filter(b => !excludeBranchIds.includes(b.id));
+
+  const filteredBranches = availableBranches.filter(b => {
+    if (!search) return true;
+    const target = `${b.name} ${b.code}`.toLowerCase();
+    const terms = search.toLowerCase().split(/\s+/).filter(Boolean);
+    return terms.every(t => target.includes(t));
+  });
+
+  const selectedBranch = branches.find(b => b.id === selectedBranchId);
+
+  return (
+    <div style={style || { position: 'relative', width: '100%', marginBottom: '0.75rem' }}>
+      {selectedBranch ? (
+        <div style={{ ...inputStyle, marginBottom: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }} onClick={() => { setSelectedBranchId(''); setSearch(''); setIsOpen(true); }}>
+          <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            {selectedBranch.name} ({selectedBranch.code})
+            {renderOptionExtra && (
+               <span style={{ marginLeft: '0.5rem' }}>{renderOptionExtra(selectedBranch.id)}</span>
+            )}
+          </span>
+          <span style={{ fontSize: '0.75rem', color: 'var(--accent-primary)', flexShrink: 0, marginLeft: '0.5rem' }}>Change</span>
+        </div>
+      ) : (
+        <input
+          type="text"
+          value={search}
+          onChange={e => { setSearch(e.target.value); setIsOpen(true); }}
+          onFocus={() => setIsOpen(true)}
+          onBlur={() => setTimeout(() => setIsOpen(false), 200)}
+          placeholder={placeholder}
+          style={{ ...inputStyle, marginBottom: 0 }}
+        />
+      )}
+      {isOpen && !selectedBranch && (
+        <div style={{
+          position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, zIndex: 50,
+          background: 'var(--bg-secondary)', border: '1px solid var(--border-primary)',
+          borderRadius: 'var(--radius-md)', maxHeight: '200px', overflowY: 'auto',
+          boxShadow: '0 4px 6px rgba(0,0,0,0.2)'
+        }}>
+          {filteredBranches.map(b => (
+            <div
+              key={b.id}
+              onClick={() => { setSelectedBranchId(b.id); setIsOpen(false); }}
+              style={{
+                padding: '0.6rem 0.8rem', cursor: 'pointer',
+                borderBottom: '1px solid var(--border-secondary)',
+                fontSize: '0.85rem', display: 'flex', justifyContent: 'space-between',
+                background: 'var(--bg-secondary)',
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-tertiary)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'var(--bg-secondary)'}
+            >
+              <span>
+                <span style={{ fontWeight: 600 }}>{b.name}</span>
+                <span style={{ color: 'var(--text-muted)', marginLeft: '0.5rem' }}>({b.code})</span>
+              </span>
+              {renderOptionExtra && renderOptionExtra(b.id)}
+            </div>
+          ))}
+          {filteredBranches.length === 0 && (
+            <div style={{ padding: '1rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+              No branches found.
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 export default function InventoryPage() {
   const [inventory, setInventory] = useState<InventoryRow[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -891,18 +981,12 @@ export default function InventoryPage() {
           />
 
           <label style={labelStyle}>Target Branch</label>
-          <select
-            id="alloc-central-branch"
-            value={allocBranchId}
-            onChange={e => setAllocBranchId(e.target.value)}
-            style={inputStyle}
-          >
-            {branches.map(b => (
-              <option key={b.id} value={b.id}>
-                {b.name} ({b.code})
-              </option>
-            ))}
-          </select>
+          <BranchPicker
+            selectedBranchId={allocBranchId}
+            setSelectedBranchId={setAllocBranchId}
+            branches={branches}
+            placeholder="Search branch name or code..."
+          />
 
           <label style={labelStyle}>Quantity to Allocate</label>
           <input
@@ -962,21 +1046,13 @@ export default function InventoryPage() {
           />
 
           <label style={labelStyle}>Source Branch</label>
-          <select
-            id="transfer-source-branch"
-            value={transferSourceBranchId}
-            onChange={e => setTransferSourceBranchId(e.target.value)}
-            style={inputStyle}
-          >
-            {branches.map(b => {
-              const avail = getBranchAvailable(b.id, transferProductId);
-              return (
-                <option key={b.id} value={b.id}>
-                  {b.name} ({b.code}) — {avail} Available
-                </option>
-              );
-            })}
-          </select>
+          <BranchPicker
+            selectedBranchId={transferSourceBranchId}
+            setSelectedBranchId={setTransferSourceBranchId}
+            branches={branches}
+            placeholder="Search source branch..."
+            renderOptionExtra={(bId) => <span style={{ color: 'var(--accent-primary)', fontSize: '0.75rem' }}>{getBranchAvailable(bId, transferProductId)} Available</span>}
+          />
 
           <div style={{ marginBottom: '1rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
@@ -999,23 +1075,21 @@ export default function InventoryPage() {
 
             {destinations.map((d, index) => (
               <div key={index} style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem', alignItems: 'center' }}>
-                <select
-                  value={d.branch_id}
-                  onChange={e => {
-                    const val = e.target.value;
-                    setDestinations(prev => prev.map((item, idx) => idx === index ? { ...item, branch_id: val } : item));
-                  }}
-                  style={{ ...inputStyle, marginBottom: 0, flex: 2 }}
-                >
-                  <option value="">Select Branch</option>
-                  {branches
-                    .filter(b => b.id !== transferSourceBranchId && !destinations.some((dest, idx) => idx !== index && dest.branch_id === b.id))
-                    .map(b => (
-                      <option key={b.id} value={b.id}>
-                        {b.name} ({b.code})
-                      </option>
-                    ))}
-                </select>
+                <div style={{ flex: 2 }}>
+                  <BranchPicker
+                    selectedBranchId={d.branch_id}
+                    setSelectedBranchId={(id) => {
+                      setDestinations(prev => prev.map((item, idx) => idx === index ? { ...item, branch_id: id } : item));
+                    }}
+                    branches={branches}
+                    placeholder="Search Branch..."
+                    style={{ position: 'relative', width: '100%', marginBottom: 0 }}
+                    excludeBranchIds={[
+                      transferSourceBranchId,
+                      ...destinations.map((dest, idx) => (idx !== index ? dest.branch_id : '')).filter(Boolean)
+                    ]}
+                  />
+                </div>
 
                 <input
                   type="number"
