@@ -11,11 +11,13 @@ interface MobileNavWrapperProps {
 export function MobileNavWrapper({ children, sidebar }: MobileNavWrapperProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
+  const [prevPathname, setPrevPathname] = useState(pathname);
 
   // Close sidebar when route changes (user tapped a link)
-  useEffect(() => {
+  if (pathname !== prevPathname) {
+    setPrevPathname(pathname);
     setSidebarOpen(false);
-  }, [pathname]);
+  }
 
   // Sync the open state to the DOM so CSS can target it
   useEffect(() => {

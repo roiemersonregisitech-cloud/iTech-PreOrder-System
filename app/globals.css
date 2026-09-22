@@ -311,6 +311,20 @@ body {
   .product-picker-grid {
     grid-template-columns: repeat(2, 1fr) !important;
   }
+
+  /* Inventory product rows stack on mobile */
+  .inventory-product-row {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+    align-items: flex-start !important;
+  }
+
+  .inventory-badges {
+    flex-wrap: wrap !important;
+    gap: 0.75rem !important;
+    justify-content: flex-start !important;
+    width: 100%;
+  }
 }
 
 /* ─── Small phone breakpoint (≤480px) ─── */

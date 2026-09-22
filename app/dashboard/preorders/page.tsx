@@ -86,7 +86,6 @@ export default function PreordersPage() {
     fetchPreorders();
   }
 
-  if (loading) {
   const totalPages = Math.ceil(totalItems / pageSize);
 
   return (

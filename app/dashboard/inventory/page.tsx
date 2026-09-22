@@ -479,6 +479,7 @@ export default function InventoryPage() {
                 {/* Product Header Row */}
                 <div
                   id={`product-row-${group.product.id}`}
+                  className="inventory-product-row"
                   onClick={() => toggleExpand(group.product.id)}
                   style={{
                     display: 'grid',
@@ -517,7 +518,7 @@ export default function InventoryPage() {
                   </div>
 
                   {/* Right: Summary Stock Badges */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', flexShrink: 0 }}>
+                  <div className="inventory-badges" style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', flexShrink: 0 }}>
                     {/* HIDE Central Stock count for non-super-admin staff (Branch Admins & Cashiers) */}
                     {isSuperAdmin && (
                       <div style={{ textAlign: 'center', padding: '0.3rem 0.6rem', borderRadius: 'var(--radius-md)', background: 'rgba(99, 102, 241, 0.08)' }}>
