@@ -163,6 +163,7 @@ export default async function DashboardPage() {
 
       {/* Stats Grid */}
       <div
+        className="stats-grid"
         style={{
           display: "grid",
           gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",

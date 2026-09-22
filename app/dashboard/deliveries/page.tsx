@@ -66,13 +66,15 @@ export default function DeliveriesPage() {
 
   return (
     <div className="animate-fade-in">
-      <div style={{ marginBottom: '1.5rem' }}>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-heading)' }}>Deliveries</h1>
-        <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Fulfilled preorders — items released to customers</p>
+      <div className="page-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+        <div>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-heading)' }}>Deliveries</h1>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Fulfilled preorders — items released to customers</p>
+        </div>
       </div>
 
       {/* Summary Stats */}
-      <div style={{
+      <div className="stats-grid" style={{
         display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
         gap: '0.75rem', marginBottom: '1.5rem',
       }}>
@@ -117,7 +119,7 @@ export default function DeliveriesPage() {
         </div>
       ) : (
         <>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '1rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
             {deliveries.map((d, i) => {
               const product = d.product as Product | undefined;
               const branch = d.branch as Branch | undefined;

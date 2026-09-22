@@ -102,9 +102,11 @@ export default function PreordersPage() {
 
   return (
     <div className="animate-fade-in">
-      <div style={{ marginBottom: '1.5rem' }}>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-heading)' }}>Preorders</h1>
-        <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Confirmed reservations with downpayment</p>
+      <div className="page-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+        <div>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-heading)' }}>Preorders</h1>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Confirmed reservations with downpayment</p>
+        </div>
       </div>
 
       <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
@@ -112,7 +114,7 @@ export default function PreordersPage() {
           placeholder="Search by preorder code…"
           style={{ flex: '1 1 280px', padding: '0.6rem 0.8rem', background: 'var(--bg-input)', border: '1px solid var(--border-primary)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontSize: '0.85rem', outline: 'none' }}
         />
-        <div style={{ display: 'flex', gap: '0.4rem' }}>
+        <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
           {['', 'active', 'fulfilled', 'cancelled'].map(s => (
             <button key={s} onClick={() => { setStatusFilter(s); setPage(1); }} style={{
               padding: '0.4rem 0.8rem', borderRadius: '9999px',
@@ -131,7 +133,7 @@ export default function PreordersPage() {
         </div>
       ) : (
         <>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '1rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
             {preorders.map((p, i) => {
               const reservation = p.reservation as Reservation;
               const product = reservation?.product as Product;

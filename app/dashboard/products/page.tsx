@@ -248,7 +248,7 @@ export default function ProductsPage() {
   return (
     <div className="animate-fade-in">
       {/* Page Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+      <div className="page-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
           <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-heading)' }}>Products</h1>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Manage catalog items, pricing, and availability</p>
@@ -289,7 +289,7 @@ export default function ProductsPage() {
       </div>
 
       {/* Product Table */}
-      <div className="glass-card" style={{ overflow: 'hidden', padding: '1rem' }}>
+      <div className="glass-card responsive-table-wrapper" style={{ overflow: 'hidden', padding: '1rem' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
           <thead>
             <tr style={{ borderBottom: '1px solid var(--border-primary)' }}>

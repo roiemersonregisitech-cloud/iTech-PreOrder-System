@@ -87,7 +87,7 @@ export function Sidebar({ staff }: SidebarProps) {
   }[staff.role];
 
   return (
-    <aside style={{
+    <aside className="sidebar" style={{
       position: 'fixed', top: 0, left: 0,
       width: '260px', height: '100vh',
       background: 'var(--bg-secondary)',

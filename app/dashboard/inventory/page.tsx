@@ -371,7 +371,7 @@ export default function InventoryPage() {
   return (
     <div className="animate-fade-in">
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+      <div className="page-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
           <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-heading)' }}>Inventory</h1>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
@@ -561,7 +561,7 @@ export default function InventoryPage() {
 
                 {/* Expanded Branch Inventory Breakdown */}
                 {isExpanded && (
-                  <div style={{ borderTop: '1px solid var(--border-primary)', background: 'var(--bg-secondary)' }}>
+                  <div className="responsive-table-wrapper" style={{ borderTop: '1px solid var(--border-primary)', background: 'var(--bg-secondary)' }}>
                     <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
                       <thead>
                         <tr style={{ borderBottom: '1px solid var(--border-secondary)' }}>

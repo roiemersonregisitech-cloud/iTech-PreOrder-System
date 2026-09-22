@@ -322,6 +322,7 @@ export default function AllocationsPage() {
     <div className="animate-fade-in">
       {/* Header */}
       <div
+        className="page-header"
         style={{
           display: "flex",
           alignItems: "center",

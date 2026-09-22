@@ -66,20 +66,11 @@ export default async function ExportPage() {
 
   return (
     <div className="animate-fade-in">
-      <div style={{ marginBottom: "2rem" }}>
-        <h1
-          style={{
-            fontSize: "1.75rem",
-            fontWeight: 800,
-            color: "var(--text-heading)",
-            marginBottom: "0.25rem",
-          }}
-        >
-          Export Data
-        </h1>
-        <p style={{ color: "var(--text-muted)", fontSize: "0.9rem" }}>
-          Filter and export your preorder data.
-        </p>
+      <div className="page-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+        <div>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-heading)' }}>Export Data</h1>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Filter and export your preorder data.</p>
+        </div>
       </div>
       
       <ExportManager 

@@ -237,7 +237,7 @@ export default function ReservationsPage() {
   return (
     <div className="animate-fade-in">
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+      <div className="page-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
           <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-heading)' }}>Reservations</h1>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Manage item reservations and preorders</p>
@@ -415,7 +415,7 @@ export default function ReservationsPage() {
       )}
 
       {/* Reserve Form Modal */}
-      <Modal isOpen={showReserveForm} onClose={() => setShowReserveForm(false)} title="New Reservation">
+      <Modal isOpen={showReserveForm} onClose={() => { setShowReserveForm(false); setSelectedProduct(''); setProductSearch(''); }} title="New Reservation">
         <div>
           {/* Branch Selector */}
           <div style={{ marginBottom: '1rem' }}>
@@ -469,7 +469,7 @@ export default function ReservationsPage() {
 
           {/* Visual Product Grid */}
           {!selectedProduct && (
-            <div style={{
+            <div className="product-picker-grid" style={{
               display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '1rem',
               maxHeight: '400px', overflowY: 'auto', marginBottom: '1rem', padding: '0.2rem'
             }}>
@@ -542,7 +542,20 @@ export default function ReservationsPage() {
 
           {selectedProduct && (
             <>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '1rem' }}>
+              <div style={{ marginBottom: '1rem', padding: '0.75rem', background: 'var(--bg-tertiary)', borderRadius: 'var(--radius-md)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Selected Product</div>
+                  <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{productSearch}</div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSelectedProduct('')}
+                  style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-primary)', padding: '0.4rem 0.8rem', borderRadius: 'var(--radius-sm)', fontSize: '0.75rem', cursor: 'pointer', color: 'var(--text-primary)' }}
+                >
+                  Change
+                </button>
+              </div>
+              <div className="responsive-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '1rem' }}>
                 <div>
                   <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>Quantity</label>
                   <input
