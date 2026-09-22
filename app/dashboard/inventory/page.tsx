@@ -146,6 +146,7 @@ function BranchPicker({
   placeholder = "Search branch name or code...",
   excludeBranchIds = [],
   renderOptionExtra,
+  style,
 }: {
   selectedBranchId: string;
   setSelectedBranchId: (id: string) => void;
