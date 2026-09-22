@@ -22,6 +22,7 @@ export default function ReservationsPage() {
   // Pagination state
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [totalItems, setTotalItems] = useState(0);
 
   // Reserve form
   const [showReserveForm, setShowReserveForm] = useState(false);
@@ -60,10 +61,15 @@ export default function ReservationsPage() {
   const fetchReservations = useCallback(async () => {
     const params = new URLSearchParams();
     if (statusFilter) params.set('status', statusFilter);
+    params.set('page', page.toString());
+    params.set('limit', pageSize.toString());
     const res = await fetch(`/api/reservations?${params}`);
     const data = await res.json();
-    if (res.ok) setReservations(data.data || []);
-  }, [statusFilter]);
+    if (res.ok) {
+      setReservations(data.data || []);
+      setTotalItems(data.pagination?.total || 0);
+    }
+  }, [statusFilter, page, pageSize]);
 
   const fetchInventory = useCallback(async () => {
     const res = await fetch('/api/inventory');
@@ -103,7 +109,7 @@ export default function ReservationsPage() {
   useEffect(() => {
     if (!initialized.current) return;
     fetchReservations();
-  }, [statusFilter, fetchReservations]);
+  }, [statusFilter, page, pageSize, fetchReservations]);
 
   // Auto-refresh pending reservations every 30s
   useEffect(() => {
@@ -223,8 +229,7 @@ export default function ReservationsPage() {
     );
   }
 
-  const totalPages = Math.ceil(reservations.length / pageSize);
-  const paginatedReservations = reservations.slice((page - 1) * pageSize, page * pageSize);
+  const totalPages = Math.ceil(totalItems / pageSize);
 
   return (
     <div className="animate-fade-in">
@@ -283,7 +288,7 @@ export default function ReservationsPage() {
       ) : (
         <>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '1rem' }}>
-            {paginatedReservations.map((r, i) => (
+            {reservations.map((r, i) => (
             <div key={r.id} className="glass-card" style={{
               padding: '1.25rem',
               animation: `fadeIn ${150 + i * 50}ms ease-out`,
@@ -391,10 +396,10 @@ export default function ReservationsPage() {
           <Pagination
             currentPage={page}
             totalPages={totalPages}
-            totalItems={reservations.length}
+            totalItems={totalItems}
             pageSize={pageSize}
             onPageChange={setPage}
-            onPageSizeChange={setPageSize}
+            onPageSizeChange={(size) => { setPageSize(size); setPage(1); }}
             pageSizeOptions={[6, 12, 24, 48]}
           />
         </>

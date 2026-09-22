@@ -12,14 +12,20 @@ export default function DeliveriesPage() {
   // Pagination state
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(12);
+  const [totalItems, setTotalItems] = useState(0);
 
   const fetchDeliveries = useCallback(async () => {
     const params = new URLSearchParams();
     if (search) params.set('search', search);
+    params.set('page', page.toString());
+    params.set('limit', pageSize.toString());
     const res = await fetch(`/api/deliveries?${params}`);
     const data = await res.json();
-    if (res.ok) setDeliveries(data.data || []);
-  }, [search]);
+    if (res.ok) {
+      setDeliveries(data.data || []);
+      setTotalItems(data.pagination?.total || 0);
+    }
+  }, [search, page, pageSize]);
 
   const initialized = useRef(false);
 
@@ -51,8 +57,7 @@ export default function DeliveriesPage() {
     );
   }
 
-  const totalPages = Math.ceil(deliveries.length / pageSize);
-  const paginatedDeliveries = deliveries.slice((page - 1) * pageSize, page * pageSize);
+  const totalPages = Math.ceil(totalItems / pageSize);
 
   // Summary stats
   const totalDelivered = deliveries.length;
@@ -113,7 +118,7 @@ export default function DeliveriesPage() {
       ) : (
         <>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '1rem' }}>
-            {paginatedDeliveries.map((d, i) => {
+            {deliveries.map((d, i) => {
               const product = d.product as Product | undefined;
               const branch = d.branch as Branch | undefined;
               const deliveredByStaff = d.staff as Staff | undefined;
@@ -223,10 +228,10 @@ export default function DeliveriesPage() {
           <Pagination
             currentPage={page}
             totalPages={totalPages}
-            totalItems={deliveries.length}
+            totalItems={totalItems}
             pageSize={pageSize}
             onPageChange={setPage}
-            onPageSizeChange={setPageSize}
+            onPageSizeChange={(size) => { setPageSize(size); setPage(1); }}
             pageSizeOptions={[6, 12, 24, 48]}
           />
         </>

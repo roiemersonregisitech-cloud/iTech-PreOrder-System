@@ -43,7 +43,10 @@ export default async function DashboardPage() {
     ).length;
   }
 
-  // Fetch data for statistics
+  // Fetch data for statistics (last 90 days for performance)
+  const ninetyDaysAgo = new Date();
+  ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+
   const preordersStatQuery = supabase.from("preorders").select(`
       created_at,
       branch:branches(id, name),
@@ -51,7 +54,8 @@ export default async function DashboardPage() {
         qty,
         product:products(id, sku, name)
       )
-    `);
+    `)
+    .gte("created_at", ninetyDaysAgo.toISOString());
   if (!isSuperAdmin && branchId) preordersStatQuery.eq("branch_id", branchId);
   const { data: rawPreordersData } = await preordersStatQuery;
 

@@ -25,6 +25,7 @@ export default function AllocationsPage() {
   // Pagination for Requests
   const [reqPage, setReqPage] = useState(1);
   const [reqPageSize, setReqPageSize] = useState(6);
+  const [reqTotalItems, setReqTotalItems] = useState(0);
 
   // Pagination for Inventory Overview
   const [invPage, setInvPage] = useState(1);
@@ -79,10 +80,15 @@ export default function AllocationsPage() {
     const params = new URLSearchParams();
     if (statusFilter) params.set("status", statusFilter);
     if (branchFilter) params.set("branch_id", branchFilter);
+    params.set("page", reqPage.toString());
+    params.set("limit", reqPageSize.toString());
     const res = await fetch(`/api/allocations?${params}`);
     const data = await res.json();
-    if (res.ok) setRequests(data.data || []);
-  }, [statusFilter, branchFilter]);
+    if (res.ok) {
+      setRequests(data.data || []);
+      setReqTotalItems(data.pagination?.total || 0);
+    }
+  }, [statusFilter, branchFilter, reqPage, reqPageSize]);
 
   // Fetch Auxiliary Data
   const fetchData = useCallback(async () => {
@@ -133,6 +139,11 @@ export default function AllocationsPage() {
     setReqPage(1);
     fetchRequests();
   }, [statusFilter, branchFilter, fetchRequests]);
+
+  useEffect(() => {
+    if (!initialized.current) return;
+    fetchRequests();
+  }, [reqPage, reqPageSize, fetchRequests]);
 
   const isSuperAdmin = currentStaff?.role === "super_admin";
   const isBranchAdmin = currentStaff?.role === "branch_admin" || isSuperAdmin;
@@ -301,8 +312,7 @@ export default function AllocationsPage() {
     (approvedQty <= 0 || approvedQty > maxAvailable);
 
   // Pagination Math
-  const reqTotalPages = Math.ceil(requests.length / reqPageSize);
-  const paginatedRequests = requests.slice((reqPage - 1) * reqPageSize, reqPage * reqPageSize);
+  const reqTotalPages = Math.ceil(reqTotalItems / reqPageSize);
 
   const filteredInventory = inventory.filter((inv) => !branchFilter || inv.branch_id === branchFilter);
   const invTotalPages = Math.ceil(filteredInventory.length / invPageSize);
@@ -485,7 +495,7 @@ export default function AllocationsPage() {
                 gap: "1rem",
               }}
             >
-              {paginatedRequests.map((r) => {
+              {requests.map((r) => {
                 const product = r.product as Product;
                 const branch = r.branch as Branch;
                 const requester = r.requester as Staff;
@@ -726,10 +736,10 @@ export default function AllocationsPage() {
             <Pagination
               currentPage={reqPage}
               totalPages={reqTotalPages}
-              totalItems={requests.length}
+              totalItems={reqTotalItems}
               pageSize={reqPageSize}
               onPageChange={setReqPage}
-              onPageSizeChange={setReqPageSize}
+              onPageSizeChange={(size) => { setReqPageSize(size); setReqPage(1); }}
               pageSizeOptions={[6, 12, 24, 48]}
             />
           </>

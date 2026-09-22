@@ -13,6 +13,7 @@ export default function PreordersPage() {
   // Pagination state
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [totalItems, setTotalItems] = useState(0);
 
   // Deliver modal
   const [deliverModal, setDeliverModal] = useState<{ preorder: Preorder } | null>(null);
@@ -26,10 +27,15 @@ export default function PreordersPage() {
     const params = new URLSearchParams();
     if (search) params.set('code', search);
     if (statusFilter) params.set('status', statusFilter);
+    params.set('page', page.toString());
+    params.set('limit', pageSize.toString());
     const res = await fetch(`/api/preorders?${params}`);
     const data = await res.json();
-    if (res.ok) setPreorders(data.data || []);
-  }, [search, statusFilter]);
+    if (res.ok) {
+      setPreorders(data.data || []);
+      setTotalItems(data.pagination?.total || 0);
+    }
+  }, [search, statusFilter, page, pageSize]);
 
   const initialized = useRef(false);
 
@@ -46,7 +52,7 @@ export default function PreordersPage() {
   useEffect(() => {
     if (!initialized.current) return;
     fetchPreorders();
-  }, [search, statusFilter, fetchPreorders]);
+  }, [search, statusFilter, page, pageSize, fetchPreorders]);
 
   // Deliver handler
   async function handleDeliver() {
@@ -92,8 +98,7 @@ export default function PreordersPage() {
     );
   }
 
-  const totalPages = Math.ceil(preorders.length / pageSize);
-  const paginatedPreorders = preorders.slice((page - 1) * pageSize, page * pageSize);
+  const totalPages = Math.ceil(totalItems / pageSize);
 
   return (
     <div className="animate-fade-in">
@@ -127,7 +132,7 @@ export default function PreordersPage() {
       ) : (
         <>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '1rem' }}>
-            {paginatedPreorders.map((p, i) => {
+            {preorders.map((p, i) => {
               const reservation = p.reservation as Reservation;
               const product = reservation?.product as Product;
               const badgeClass = p.status === 'active' ? 'badge-active' : p.status === 'fulfilled' ? 'badge-confirmed' : 'badge-cancelled';
@@ -180,10 +185,10 @@ export default function PreordersPage() {
           <Pagination
             currentPage={page}
             totalPages={totalPages}
-            totalItems={preorders.length}
+            totalItems={totalItems}
             pageSize={pageSize}
             onPageChange={setPage}
-            onPageSizeChange={setPageSize}
+            onPageSizeChange={(size) => { setPageSize(size); setPage(1); }}
             pageSizeOptions={[6, 12, 24, 48]}
           />
         </>

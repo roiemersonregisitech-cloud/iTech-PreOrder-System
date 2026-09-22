@@ -86,7 +86,25 @@ export default function SettingsPage() {
     if (res.ok) fetchSettings();
   }
 
-  if (loading) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh' }}><Spinner size={32} /></div>;
+  if (loading) return (
+    <div className="animate-fade-in">
+      <div style={{ marginBottom: '1.5rem' }}>
+        <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-heading)' }}>Settings</h1>
+        <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Loading configuration…</p>
+      </div>
+      <div className="glass-card" style={{ padding: '1.25rem', marginBottom: '1rem' }}>
+        <div style={{ width: '200px', height: '1rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-tertiary)', marginBottom: '1rem' }} />
+        <div style={{ width: '100%', maxWidth: '320px', height: '38px', borderRadius: 'var(--radius-md)', background: 'var(--bg-tertiary)', marginBottom: '0.75rem' }} />
+        <div style={{ width: '140px', height: '36px', borderRadius: 'var(--radius-md)', background: 'var(--bg-tertiary)' }} />
+      </div>
+      <div className="glass-card" style={{ padding: '1.25rem' }}>
+        <div style={{ width: '240px', height: '1rem', borderRadius: 'var(--radius-sm)', background: 'var(--bg-tertiary)', marginBottom: '1rem' }} />
+        {[1, 2].map(i => (
+          <div key={i} style={{ width: '100%', height: '48px', borderRadius: 'var(--radius-md)', background: 'var(--bg-tertiary)', marginBottom: '0.5rem' }} />
+        ))}
+      </div>
+    </div>
+  );
 
   const inputStyle: React.CSSProperties = {
     padding: '0.6rem 0.8rem', background: 'var(--bg-input)',
