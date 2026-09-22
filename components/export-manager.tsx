@@ -21,10 +21,12 @@ interface ExportManagerProps {
   branches: string[];
   skus: string[];
   statuses: string[];
+  isSuperAdmin: boolean;
+  staffBranchName: string;
 }
 
-export function ExportManager({ data, branches, skus, statuses }: ExportManagerProps) {
-  const [filterBranch, setFilterBranch] = useState<string>("all");
+export function ExportManager({ data, branches, skus, statuses, isSuperAdmin, staffBranchName }: ExportManagerProps) {
+  const [filterBranch, setFilterBranch] = useState<string>(isSuperAdmin ? "all" : staffBranchName);
   const [filterSku, setFilterSku] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterStartDate, setFilterStartDate] = useState<string>("");
@@ -156,10 +158,12 @@ export function ExportManager({ data, branches, skus, statuses }: ExportManagerP
               <select
                 value={filterBranch}
                 onChange={(e) => setFilterBranch(e.target.value)}
-                style={{ width: "100%", padding: "0.625rem", borderRadius: "var(--radius-md)", background: "var(--bg-secondary)", border: "1px solid var(--border-primary)", color: "var(--text-primary)", fontSize: "0.9rem" }}
+                disabled={!isSuperAdmin}
+                style={{ width: "100%", padding: "0.625rem", borderRadius: "var(--radius-md)", background: !isSuperAdmin ? "var(--bg-tertiary)" : "var(--bg-secondary)", border: "1px solid var(--border-primary)", color: "var(--text-primary)", fontSize: "0.9rem", opacity: !isSuperAdmin ? 0.7 : 1 }}
               >
-                <option value="all">All Branches</option>
-                {branches.map((b) => (
+                {isSuperAdmin && <option value="all">All Branches</option>}
+                {!isSuperAdmin && <option value={staffBranchName}>{staffBranchName}</option>}
+                {isSuperAdmin && branches.map((b) => (
                   <option key={b} value={b}>{b}</option>
                 ))}
               </select>

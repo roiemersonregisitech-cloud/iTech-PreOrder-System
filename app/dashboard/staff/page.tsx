@@ -7,6 +7,7 @@ import type { Staff, Branch } from '@/lib/types';
 export default function StaffPage() {
   const [staffList, setStaffList] = useState<Staff[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
+  const [currentStaff, setCurrentStaff] = useState<Staff | null>(null);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
 
@@ -34,13 +35,25 @@ export default function StaffPage() {
     if (res.ok) setBranches(data.data || []);
   }, []);
 
+  const fetchCurrentStaff = useCallback(async () => {
+    const res = await fetch('/api/staff/me');
+    if (res.ok) {
+      const data = await res.json();
+      setCurrentStaff(data.staff);
+      if (data.staff.role === 'branch_admin') {
+        setNewRole('cashier');
+        setNewBranch(data.staff.branch_id);
+      }
+    }
+  }, []);
+
   const initialized = useRef(false);
 
   useEffect(() => {
     if (initialized.current) return;
     initialized.current = true;
     (async () => {
-      await Promise.all([fetchStaff(), fetchBranches()]);
+      await Promise.all([fetchStaff(), fetchBranches(), fetchCurrentStaff()]);
       setLoading(false);
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -59,7 +72,11 @@ export default function StaffPage() {
     const data = await res.json();
     if (!res.ok) { setCreateError(data.error); return; }
     setShowCreate(false);
-    setNewEmail(''); setNewPassword(''); setNewName(''); setNewRole('cashier'); setNewBranch('');
+    setNewEmail(''); setNewPassword(''); setNewName('');
+    if (currentStaff?.role !== 'branch_admin') {
+      setNewRole('cashier');
+      setNewBranch('');
+    }
     fetchStaff();
   }
 
@@ -168,18 +185,28 @@ export default function StaffPage() {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
             <div>
               <label style={labelStyle}>Role</label>
-              <select id="staff-role" value={newRole} onChange={e => setNewRole(e.target.value)} style={inputStyle}>
-                <option value="cashier">Cashier</option>
-                <option value="branch_admin">Branch Admin</option>
-                <option value="super_admin">Super Admin</option>
-              </select>
+              {currentStaff?.role === 'branch_admin' ? (
+                <div style={{...inputStyle, background: 'var(--bg-tertiary)', opacity: 0.7}}>Cashier</div>
+              ) : (
+                <select id="staff-role" value={newRole} onChange={e => setNewRole(e.target.value)} style={inputStyle}>
+                  <option value="cashier">Cashier</option>
+                  <option value="branch_admin">Branch Admin</option>
+                  <option value="super_admin">Super Admin</option>
+                </select>
+              )}
             </div>
             <div>
               <label style={labelStyle}>Branch</label>
-              <select id="staff-branch" value={newBranch} onChange={e => setNewBranch(e.target.value)} style={inputStyle}>
-                <option value="">Select branch</option>
-                {branches.map(b => <option key={b.id} value={b.id}>{b.name} ({b.code})</option>)}
-              </select>
+              {currentStaff?.role === 'branch_admin' ? (
+                <div style={{...inputStyle, background: 'var(--bg-tertiary)', opacity: 0.7}}>
+                  {branches.find(b => b.id === currentStaff.branch_id)?.name || 'Your Branch'}
+                </div>
+              ) : (
+                <select id="staff-branch" value={newBranch} onChange={e => setNewBranch(e.target.value)} style={inputStyle}>
+                  <option value="">Select branch</option>
+                  {branches.map(b => <option key={b.id} value={b.id}>{b.name} ({b.code})</option>)}
+                </select>
+              )}
             </div>
           </div>
           {createError && <div style={{ padding: '0.5rem', borderRadius: 'var(--radius-md)', background: 'var(--accent-danger-bg)', color: 'var(--accent-danger)', fontSize: '0.8rem', marginBottom: '0.75rem' }}>{createError}</div>}

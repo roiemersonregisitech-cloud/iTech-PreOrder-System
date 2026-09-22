@@ -56,8 +56,8 @@ export default function DeliveriesPage() {
     <div className="animate-fade-in">
       <div className="page-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-heading)' }}>Deliveries</h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Fulfilled preorders — items released to customers</p>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-heading)' }}>Customer Received</h1>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Fulfilled preorders — items received by customers</p>
         </div>
       </div>
 
@@ -67,7 +67,7 @@ export default function DeliveriesPage() {
         gap: '0.75rem', marginBottom: '1.5rem',
       }}>
         <div className="glass-card" style={{ padding: '1rem' }}>
-          <div style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.25rem' }}>Total Deliveries</div>
+          <div style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.25rem' }}>Total Received</div>
           <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--accent-primary)' }}>{totalDelivered}</div>
         </div>
         <div className="glass-card" style={{ padding: '1rem' }}>

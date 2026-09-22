@@ -10,6 +10,14 @@ export default async function ExportPage() {
   const branchId = session.staff.branch_id;
   const isSuperAdmin = session.staff.role === "super_admin";
 
+  let staffBranchName = "Unknown";
+  if (branchId) {
+    const { data: branchData } = await supabase.from('branches').select('name').eq('id', branchId).single();
+    if (branchData) {
+      staffBranchName = branchData.name;
+    }
+  }
+
   // Fetch all preorders
   const preordersQuery = supabase.from("preorders").select(`
     id,
@@ -78,6 +86,8 @@ export default async function ExportPage() {
         branches={branches} 
         skus={skus} 
         statuses={statuses} 
+        isSuperAdmin={isSuperAdmin}
+        staffBranchName={staffBranchName}
       />
     </div>
   );

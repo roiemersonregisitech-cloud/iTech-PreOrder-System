@@ -33,9 +33,20 @@ export async function GET(request: NextRequest) {
       query = query.eq('branch_id', branchId);
     }
 
-    // Search by preorder code (partial match)
+    // Search by preorder code, customer name, or contact (partial match)
     if (code) {
-      query = query.ilike('preorder_code', `%${code}%`);
+      const { data: matchingReservations } = await supabase
+        .from('reservations')
+        .select('id')
+        .or(`customer_name.ilike.%${code}%,customer_contact.ilike.%${code}%`);
+        
+      const matchingResIds = matchingReservations?.map(r => r.id) || [];
+      
+      if (matchingResIds.length > 0) {
+        query = query.or(`preorder_code.ilike.%${code}%,reservation_id.in.(${matchingResIds.join(',')})`);
+      } else {
+        query = query.ilike('preorder_code', `%${code}%`);
+      }
     }
 
     if (status) {

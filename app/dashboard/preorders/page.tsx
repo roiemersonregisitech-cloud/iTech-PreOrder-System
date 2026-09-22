@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Modal, ActionButton, Pagination, SkeletonCard } from '@/components/ui';
-import type { Preorder, Reservation, Product } from '@/lib/types';
+import type { Preorder, Reservation, Product, Staff } from '@/lib/types';
 
 export default function PreordersPage() {
   const [preorders, setPreorders] = useState<Preorder[]>([]);
@@ -22,6 +22,25 @@ export default function PreordersPage() {
 
   // Sales order display
   const [salesOrderResult, setSalesOrderResult] = useState<{ sales_order_number: string; preorder_code: string } | null>(null);
+
+  const [currentStaff, setCurrentStaff] = useState<Staff | null>(null);
+
+  // Cancel modal
+  const [cancelModal, setCancelModal] = useState<{ preorder: Preorder } | null>(null);
+  const [cancelReason, setCancelReason] = useState('');
+  const [cancelError, setCancelError] = useState('');
+
+  // Revert modal
+  const [revertModal, setRevertModal] = useState<{ preorder: Preorder } | null>(null);
+  const [revertError, setRevertError] = useState('');
+
+  const fetchStaff = useCallback(async () => {
+    const res = await fetch('/api/staff/me');
+    if (res.ok) {
+      const data = await res.json();
+      setCurrentStaff(data.staff);
+    }
+  }, []);
 
   const fetchPreorders = useCallback(async () => {
     const params = new URLSearchParams();
@@ -43,7 +62,7 @@ export default function PreordersPage() {
     if (initialized.current) return;
     initialized.current = true;
     (async () => {
-      await fetchPreorders();
+      await Promise.all([fetchPreorders(), fetchStaff()]);
       setLoading(false);
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -83,6 +102,43 @@ export default function PreordersPage() {
     setDeliverModal(null);
     setConfirmCode('');
     setDeliverError('');
+    fetchPreorders();
+  }
+
+  async function handleCancel() {
+    if (!cancelModal) return;
+    setCancelError('');
+    if (!cancelReason.trim()) {
+      setCancelError('Please provide a reason for cancellation');
+      return;
+    }
+    const res = await fetch(`/api/preorders/${cancelModal.preorder.id}/cancel`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reason: cancelReason }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      setCancelError(data.error || 'Failed to cancel preorder');
+      return;
+    }
+    setCancelModal(null);
+    setCancelReason('');
+    fetchPreorders();
+  }
+
+  async function handleRevert() {
+    if (!revertModal) return;
+    setRevertError('');
+    const res = await fetch(`/api/preorders/${revertModal.preorder.id}/revert`, {
+      method: 'POST'
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      setRevertError(data.error || 'Failed to revert preorder');
+      return;
+    }
+    setRevertModal(null);
     fetchPreorders();
   }
 
@@ -168,6 +224,33 @@ export default function PreordersPage() {
                         }}
                         style={{ width: '100%', justifyContent: 'center', padding: '0.6rem' }}
                       />
+                      {(currentStaff?.role === 'branch_admin' || currentStaff?.role === 'super_admin') && (
+                        <button
+                          onClick={() => {
+                            setCancelModal({ preorder: p });
+                            setCancelReason('');
+                            setCancelError('');
+                          }}
+                          style={{ width: '100%', marginTop: '0.5rem', padding: '0.6rem', background: 'transparent', border: '1px solid var(--border-primary)', borderRadius: 'var(--radius-md)', color: 'var(--accent-danger)', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer' }}
+                        >
+                          Cancel Preorder
+                        </button>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Revert Button — only for fulfilled preorders */}
+                  {p.status === 'fulfilled' && (currentStaff?.role === 'branch_admin' || currentStaff?.role === 'super_admin') && (
+                    <div style={{ paddingTop: '0.75rem', marginTop: '0.75rem', borderTop: '1px solid var(--border-secondary)' }}>
+                      <button
+                        onClick={() => {
+                          setRevertModal({ preorder: p });
+                          setRevertError('');
+                        }}
+                        style={{ width: '100%', padding: '0.6rem', background: 'var(--bg-tertiary)', border: '1px solid var(--border-primary)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer' }}
+                      >
+                        Revert to Active
+                      </button>
                     </div>
                   )}
                 </div>
@@ -261,6 +344,67 @@ export default function PreordersPage() {
             variant="primary"
             disabled={!deliverModal || confirmCode.trim() !== deliverModal.preorder.preorder_code}
             onClick={handleDeliver}
+            style={{ width: '100%', justifyContent: 'center', padding: '0.7rem' }}
+          />
+        </div>
+      </Modal>
+
+      {/* Cancel Confirmation Modal */}
+      <Modal isOpen={!!cancelModal} onClose={() => setCancelModal(null)} title="Cancel Preorder">
+        <div>
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
+            Cancelling this preorder will release the reserved inventory back to available stock. This action cannot be undone.
+          </p>
+          <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
+            Reason for Cancellation
+          </label>
+          <input
+            type="text"
+            value={cancelReason}
+            onChange={e => setCancelReason(e.target.value)}
+            placeholder="e.g., Customer requested refund"
+            style={{
+              width: '100%', padding: '0.7rem 0.8rem', marginBottom: '1rem',
+              background: 'var(--bg-input)', border: '1px solid var(--border-primary)',
+              borderRadius: 'var(--radius-md)', color: 'var(--text-primary)',
+              fontSize: '0.9rem', outline: 'none',
+            }}
+          />
+          {cancelError && (
+            <div style={{ padding: '0.6rem', marginBottom: '1rem', borderRadius: 'var(--radius-md)', background: 'var(--accent-danger-bg)', color: 'var(--accent-danger)', fontSize: '0.8rem', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+              {cancelError}
+            </div>
+          )}
+          <ActionButton
+            id="submit-cancel"
+            label="Cancel Preorder"
+            loadingLabel="Cancelling…"
+            variant="danger"
+            disabled={!cancelReason.trim()}
+            onClick={handleCancel}
+            style={{ width: '100%', justifyContent: 'center', padding: '0.7rem' }}
+          />
+        </div>
+      </Modal>
+
+      {/* Revert Confirmation Modal */}
+      <Modal isOpen={!!revertModal} onClose={() => setRevertModal(null)} title="Revert to Active">
+        <div>
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
+            This will revert the fulfilled preorder back to active status and restore the delivered inventory back to the branch.
+            Use this if an item was accidentally marked as delivered.
+          </p>
+          {revertError && (
+            <div style={{ padding: '0.6rem', marginBottom: '1rem', borderRadius: 'var(--radius-md)', background: 'var(--accent-danger-bg)', color: 'var(--accent-danger)', fontSize: '0.8rem', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+              {revertError}
+            </div>
+          )}
+          <ActionButton
+            id="submit-revert"
+            label="Revert Preorder"
+            loadingLabel="Reverting…"
+            variant="primary"
+            onClick={handleRevert}
             style={{ width: '100%', justifyContent: 'center', padding: '0.7rem' }}
           />
         </div>

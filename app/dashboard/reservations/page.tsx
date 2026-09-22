@@ -19,6 +19,8 @@ export default function ReservationsPage() {
   const [currentStaff, setCurrentStaff] = useState<Staff | null>(null);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>('pending');
+  const [search, setSearch] = useState('');
+  
   // Pagination state
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -62,6 +64,7 @@ export default function ReservationsPage() {
   const fetchReservations = useCallback(async () => {
     const params = new URLSearchParams();
     if (statusFilter) params.set('status', statusFilter);
+    if (search) params.set('search', search);
     params.set('page', page.toString());
     params.set('limit', pageSize.toString());
     const res = await fetch(`/api/reservations?${params}`);
@@ -70,7 +73,7 @@ export default function ReservationsPage() {
       setReservations(data.data || []);
       setTotalItems(data.pagination?.total || 0);
     }
-  }, [statusFilter, page, pageSize]);
+  }, [statusFilter, search, page, pageSize]);
 
   const fetchInventory = useCallback(async () => {
     const res = await fetch('/api/inventory');
@@ -110,7 +113,7 @@ export default function ReservationsPage() {
   useEffect(() => {
     if (!initialized.current) return;
     fetchReservations();
-  }, [statusFilter, page, pageSize, fetchReservations]);
+  }, [statusFilter, search, page, pageSize, fetchReservations]);
 
   // Auto-refresh pending reservations every 30s
   useEffect(() => {
@@ -247,9 +250,27 @@ export default function ReservationsPage() {
         </button>
       </div>
 
-      {/* Status Filter Tabs */}
-      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
-        {['pending', 'confirmed', 'expired', 'cancelled', ''].map(s => (
+      {/* Search and Filters */}
+      <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+        <div style={{ position: 'relative', flex: '1 1 300px' }}>
+          <svg style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.3-4.3"/></svg>
+          <input
+            type="text"
+            placeholder="Search by customer name or product..."
+            value={search}
+            onChange={e => { setSearch(e.target.value); setPage(1); }}
+            disabled={loading && !search}
+            style={{
+              width: '100%', padding: '0.625rem 1rem 0.625rem 2.5rem',
+              borderRadius: '9999px', border: '1px solid var(--border-primary)',
+              background: 'var(--bg-secondary)', color: 'var(--text-primary)',
+              fontSize: '0.9rem', outline: 'none', transition: 'all 0.2s',
+              opacity: (loading && !search) ? 0.7 : 1
+            }}
+          />
+        </div>
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+          {['pending', 'confirmed', 'expired', 'cancelled', ''].map(s => (
           <button
             key={s}
             id={`filter-${s || 'all'}`}
@@ -284,7 +305,7 @@ export default function ReservationsPage() {
         </div>
       ) : (
         <>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '1rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(420px, 1fr))', gap: '1rem' }}>
             {reservations.map((r, i) => (
             <div key={r.id} className="glass-card" style={{
               padding: '1.25rem',

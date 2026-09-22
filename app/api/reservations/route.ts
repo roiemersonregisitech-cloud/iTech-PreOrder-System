@@ -109,6 +109,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const branchId = searchParams.get('branch_id');
     const status = searchParams.get('status');
+    const search = searchParams.get('search');
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '50');
     const offset = (page - 1) * limit;
@@ -130,6 +131,20 @@ export async function GET(request: NextRequest) {
 
     if (status) {
       query = query.eq('status', status);
+    }
+
+    if (search) {
+      const { data: matchingProducts } = await supabase
+        .from('products')
+        .select('id')
+        .or(`name.ilike.%${search}%,sku.ilike.%${search}%`);
+      
+      const matchingProdIds = matchingProducts?.map(p => p.id) || [];
+      if (matchingProdIds.length > 0) {
+        query = query.or(`customer_name.ilike.%${search}%,customer_contact.ilike.%${search}%,product_id.in.(${matchingProdIds.join(',')})`);
+      } else {
+        query = query.or(`customer_name.ilike.%${search}%,customer_contact.ilike.%${search}%`);
+      }
     }
 
     const { data, error, count } = await query;
