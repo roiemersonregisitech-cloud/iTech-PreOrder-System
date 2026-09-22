@@ -57,6 +57,11 @@ export default function InventoryPage() {
   const [destinations, setDestinations] = useState<TransferDestination[]>([{ branch_id: '', qty: '' }]);
   const [transferError, setTransferError] = useState('');
 
+  // Product Picker Search States
+  const [centralProductSearch, setCentralProductSearch] = useState('');
+  const [allocProductSearch, setAllocProductSearch] = useState('');
+  const [transferProductSearch, setTransferProductSearch] = useState('');
+
   // Reclaim Modal
   const [reclaimItem, setReclaimItem] = useState<InventoryRow | null>(null);
   const [reclaimQty, setReclaimQty] = useState('');
@@ -357,6 +362,97 @@ export default function InventoryPage() {
   const totalPages = Math.ceil(grouped.length / pageSize);
   const paginatedGrouped = grouped.slice((page - 1) * pageSize, page * pageSize);
 
+  function ProductPicker({ 
+    selectedProductId, 
+    setSelectedProductId, 
+    search, 
+    setSearch, 
+    type 
+  }: { 
+    selectedProductId: string, 
+    setSelectedProductId: (id: string) => void,
+    search: string,
+    setSearch: (s: string) => void,
+    type: 'central' | 'allocate' | 'transfer'
+  }) {
+    const filteredProducts = products.filter(p => 
+      p.is_active !== false &&
+      (p.name.toLowerCase().includes(search.toLowerCase()) ||
+       p.sku.toLowerCase().includes(search.toLowerCase()))
+    );
+
+    if (selectedProductId) {
+      const p = products.find(p => p.id === selectedProductId);
+      return (
+        <div style={{ marginBottom: '1rem', padding: '0.75rem', background: 'var(--bg-tertiary)', borderRadius: 'var(--radius-md)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Selected Product</div>
+            <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{p?.name}</div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setSelectedProductId('')}
+            style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-primary)', padding: '0.4rem 0.8rem', borderRadius: 'var(--radius-sm)', fontSize: '0.75rem', cursor: 'pointer', color: 'var(--text-primary)' }}
+          >
+            Change
+          </button>
+        </div>
+      );
+    }
+
+    return (
+      <div style={{ marginBottom: '1rem' }}>
+        <input
+          type="text"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder="Search by name or SKU…"
+          style={inputStyle}
+        />
+        <div className="product-picker-grid" style={{
+          display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '1rem',
+          maxHeight: '300px', overflowY: 'auto', padding: '0.2rem'
+        }}>
+          {filteredProducts.map(p => {
+            let availText = `${p.central_qty || 0} in central`;
+            return (
+              <div
+                key={p.id}
+                onClick={() => { setSelectedProductId(p.id); setSearch(''); }}
+                style={{
+                  border: '1px solid var(--border-primary)', borderRadius: 'var(--radius-md)',
+                  background: 'var(--bg-secondary)', overflow: 'hidden', cursor: 'pointer',
+                  transition: 'transform 0.2s, box-shadow 0.2s',
+                  display: 'flex', flexDirection: 'column', height: '100%',
+                }}
+              >
+                <div style={{ height: '120px', background: 'var(--bg-tertiary)', position: 'relative' }}>
+                   {p.image_url ? (
+                     <img src={p.image_url} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                   ) : (
+                     <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', opacity: 0.5 }}>📦</div>
+                   )}
+                </div>
+                <div style={{ padding: '0.75rem', display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
+                  <div style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--text-heading)', marginBottom: '0.2rem', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{p.name}</div>
+                  <div style={{ color: 'var(--text-muted)', fontSize: '0.7rem', marginBottom: '0.5rem', fontFamily: 'monospace' }}>{p.sku}</div>
+                  <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                     <span style={{ fontSize: '0.75rem', color: 'var(--accent-primary)', fontWeight: 600 }}>{availText}</span>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+          {filteredProducts.length === 0 && (
+            <div style={{ gridColumn: '1 / -1', padding: '1rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+              No products found.
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="animate-fade-in">
       {/* Header */}
@@ -383,7 +479,7 @@ export default function InventoryPage() {
               <button
                 id="add-central-btn"
                 onClick={() => {
-                  setCentralProductId(products[0]?.id || '');
+                  setCentralProductId('');
                   setShowAddCentral(true);
                 }}
                 disabled={loading}
@@ -406,7 +502,7 @@ export default function InventoryPage() {
               <button
                 id="allocate-central-btn"
                 onClick={() => {
-                  setAllocProductId(products[0]?.id || '');
+                  setAllocProductId('');
                   setAllocBranchId(branches[0]?.id || '');
                   setShowAllocateCentral(true);
                 }}
@@ -430,8 +526,7 @@ export default function InventoryPage() {
               <button
                 id="transfer-branch-btn"
                 onClick={() => {
-                  const firstProd = products[0]?.id || '';
-                  setTransferProductId(firstProd);
+                  setTransferProductId('');
                   setTransferSourceBranchId(branches[0]?.id || '');
                   setDestinations([{ branch_id: branches[1]?.id || '', qty: '' }]);
                   setShowTransfer(true);
@@ -649,18 +744,13 @@ export default function InventoryPage() {
       <Modal isOpen={showAddCentral} onClose={() => setShowAddCentral(false)} title="Add Central Warehouse Stock">
         <div>
           <label style={labelStyle}>Select Product</label>
-          <select
-            id="add-central-prod"
-            value={centralProductId}
-            onChange={e => setCentralProductId(e.target.value)}
-            style={inputStyle}
-          >
-            {products.map(p => (
-              <option key={p.id} value={p.id}>
-                {p.name} (SKU: {p.sku}) — Current Central: {p.central_qty || 0}
-              </option>
-            ))}
-          </select>
+          <ProductPicker
+            selectedProductId={centralProductId}
+            setSelectedProductId={setCentralProductId}
+            search={centralProductSearch}
+            setSearch={setCentralProductSearch}
+            type="central"
+          />
 
           <label style={labelStyle}>Quantity to Add to Central Stock</label>
           <input
@@ -710,18 +800,13 @@ export default function InventoryPage() {
       <Modal isOpen={showAllocateCentral} onClose={() => setShowAllocateCentral(false)} title="Allocate Central Stock to Branch">
         <div>
           <label style={labelStyle}>Select Product</label>
-          <select
-            id="alloc-central-prod"
-            value={allocProductId}
-            onChange={e => setAllocProductId(e.target.value)}
-            style={inputStyle}
-          >
-            {products.map(p => (
-              <option key={p.id} value={p.id}>
-                {p.name} (SKU: {p.sku}) — Central Avail: {p.central_qty || 0}
-              </option>
-            ))}
-          </select>
+          <ProductPicker
+            selectedProductId={allocProductId}
+            setSelectedProductId={setAllocProductId}
+            search={allocProductSearch}
+            setSearch={setAllocProductSearch}
+            type="allocate"
+          />
 
           <label style={labelStyle}>Target Branch</label>
           <select
@@ -785,18 +870,13 @@ export default function InventoryPage() {
       <Modal isOpen={showTransfer} onClose={() => setShowTransfer(false)} title="Transfer Stock Between Branches">
         <div>
           <label style={labelStyle}>Select Product</label>
-          <select
-            id="transfer-prod"
-            value={transferProductId}
-            onChange={e => setTransferProductId(e.target.value)}
-            style={inputStyle}
-          >
-            {products.map(p => (
-              <option key={p.id} value={p.id}>
-                {p.name} (SKU: {p.sku})
-              </option>
-            ))}
-          </select>
+          <ProductPicker
+            selectedProductId={transferProductId}
+            setSelectedProductId={setTransferProductId}
+            search={transferProductSearch}
+            setSearch={setTransferProductSearch}
+            type="transfer"
+          />
 
           <label style={labelStyle}>Source Branch</label>
           <select
