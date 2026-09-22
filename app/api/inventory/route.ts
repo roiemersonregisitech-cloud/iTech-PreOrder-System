@@ -39,14 +39,12 @@ export async function GET(request: NextRequest) {
     // If search, filter by product name/sku client-side (Supabase doesn't support nested filtering easily)
     let filtered = data || [];
     if (search) {
-      const searchLower = search.toLowerCase();
+      const searchTerms = search.toLowerCase().split(/\s+/).filter(Boolean);
       filtered = filtered.filter(
         (item: Record<string, unknown>) => {
           const product = item.product as Record<string, unknown> | null;
-          return (
-            (product?.name as string)?.toLowerCase().includes(searchLower) ||
-            (product?.sku as string)?.toLowerCase().includes(searchLower)
-          );
+          const searchTarget = `${product?.name || ''} ${product?.sku || ''}`.toLowerCase();
+          return searchTerms.every(term => searchTarget.includes(term));
         }
       );
     }

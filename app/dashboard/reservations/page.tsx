@@ -217,11 +217,13 @@ export default function ReservationsPage() {
     }
   }
 
-  const filteredProducts = products.filter((p: Product) =>
-    p.is_active &&
-    (p.name.toLowerCase().includes(productSearch.toLowerCase()) ||
-     p.sku.toLowerCase().includes(productSearch.toLowerCase()))
-  );
+  const searchTerms = productSearch.toLowerCase().split(/\s+/).filter(Boolean);
+  const filteredProducts = products.filter((p: Product) => {
+    if (!p.is_active) return false;
+    if (searchTerms.length === 0) return true;
+    const searchTarget = `${p.name} ${p.sku}`.toLowerCase();
+    return searchTerms.every(term => searchTarget.includes(term));
+  });
 
   const totalPages = Math.ceil(totalItems / pageSize);
 

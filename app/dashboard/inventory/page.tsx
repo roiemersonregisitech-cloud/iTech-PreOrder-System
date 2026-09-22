@@ -59,11 +59,13 @@ function ProductPicker({
   type: 'central' | 'allocate' | 'transfer',
   products: Product[]
 }) {
-  const filteredProducts = products.filter(p => 
-    p.is_active !== false &&
-    (p.name.toLowerCase().includes(search.toLowerCase()) ||
-     p.sku.toLowerCase().includes(search.toLowerCase()))
-  );
+  const searchTerms = search.toLowerCase().split(/\s+/).filter(Boolean);
+  const filteredProducts = products.filter(p => {
+    if (p.is_active === false) return false;
+    if (searchTerms.length === 0) return true;
+    const searchTarget = `${p.name} ${p.sku}`.toLowerCase();
+    return searchTerms.every(term => searchTarget.includes(term));
+  });
 
   if (selectedProductId) {
     const p = products.find(p => p.id === selectedProductId);
