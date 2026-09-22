@@ -27,6 +27,8 @@ export function ExportManager({ data, branches, skus, statuses }: ExportManagerP
   const [filterBranch, setFilterBranch] = useState<string>("all");
   const [filterSku, setFilterSku] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [filterStartDate, setFilterStartDate] = useState<string>("");
+  const [filterEndDate, setFilterEndDate] = useState<string>("");
 
   const columns = [
     { key: "preorder_code", label: "Preorder Code" },
@@ -60,9 +62,24 @@ export function ExportManager({ data, branches, skus, statuses }: ExportManagerP
       if (filterBranch !== "all" && row.branch_name !== filterBranch) return false;
       if (filterSku !== "all" && row.sku !== filterSku) return false;
       if (filterStatus !== "all" && row.status !== filterStatus) return false;
+      
+      if (filterStartDate) {
+        const rowDate = new Date(row.created_at);
+        const startDate = new Date(filterStartDate);
+        startDate.setHours(0, 0, 0, 0);
+        if (rowDate < startDate) return false;
+      }
+      
+      if (filterEndDate) {
+        const rowDate = new Date(row.created_at);
+        const endDate = new Date(filterEndDate);
+        endDate.setHours(23, 59, 59, 999);
+        if (rowDate > endDate) return false;
+      }
+      
       return true;
     });
-  }, [data, filterBranch, filterSku, filterStatus]);
+  }, [data, filterBranch, filterSku, filterStatus, filterStartDate, filterEndDate]);
 
   const handleExport = () => {
     if (filteredData.length === 0) {
@@ -110,6 +127,28 @@ export function ExportManager({ data, branches, skus, statuses }: ExportManagerP
             Data Filters
           </h3>
           <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+            <div>
+              <label style={{ display: "block", fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "0.3rem" }}>
+                Date Range
+              </label>
+              <div style={{ display: "flex", gap: "0.5rem" }}>
+                <input
+                  type="date"
+                  value={filterStartDate}
+                  onChange={(e) => setFilterStartDate(e.target.value)}
+                  style={{ width: "100%", padding: "0.625rem", borderRadius: "var(--radius-md)", background: "var(--bg-secondary)", border: "1px solid var(--border-primary)", color: "var(--text-primary)", fontSize: "0.9rem" }}
+                  title="Start Date"
+                />
+                <input
+                  type="date"
+                  value={filterEndDate}
+                  onChange={(e) => setFilterEndDate(e.target.value)}
+                  style={{ width: "100%", padding: "0.625rem", borderRadius: "var(--radius-md)", background: "var(--bg-secondary)", border: "1px solid var(--border-primary)", color: "var(--text-primary)", fontSize: "0.9rem" }}
+                  title="End Date"
+                />
+              </div>
+            </div>
+            
             <div>
               <label style={{ display: "block", fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "0.3rem" }}>
                 Branch
