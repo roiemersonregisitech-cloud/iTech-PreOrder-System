@@ -11,7 +11,7 @@ export default function DeliveriesPage() {
 
   // Pagination state
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(12);
+  const [pageSize, setPageSize] = useState(6);
   const [totalItems, setTotalItems] = useState(0);
 
   const fetchDeliveries = useCallback(async () => {

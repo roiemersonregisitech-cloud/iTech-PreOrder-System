@@ -150,7 +150,7 @@ export default function InventoryPage() {
 
   // Pagination state
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(6);
 
   // Add Central Stock Modal
   const [showAddCentral, setShowAddCentral] = useState(false);
@@ -816,7 +816,7 @@ export default function InventoryPage() {
           pageSize={pageSize}
           onPageChange={setPage}
           onPageSizeChange={setPageSize}
-          pageSizeOptions={[5, 10, 20, 50]}
+          pageSizeOptions={[6, 12, 24, 48]}
         />
       </div>
 
