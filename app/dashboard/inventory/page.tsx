@@ -810,22 +810,24 @@ export default function InventoryPage() {
                     <div className="responsive-table-wrapper" style={{ borderTop: '1px solid var(--border-primary)', background: 'var(--bg-secondary)' }}>
                       <div style={{ padding: '0.75rem 1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border-secondary)' }}>
                         <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-heading)' }}>Branch Allocations</span>
-                        <div style={{ position: 'relative', width: '250px' }}>
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)' }}>
-                            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                          </svg>
-                          <input
-                            type="text"
-                            placeholder="Search branch..."
-                            value={expandedBranchSearch[group.product.id] || ''}
-                            onChange={e => setExpandedBranchSearch(prev => ({ ...prev, [group.product.id]: e.target.value }))}
-                            style={{
-                              width: '100%', padding: '0.4rem 0.5rem 0.4rem 2rem',
-                              borderRadius: 'var(--radius-md)', border: '1px solid var(--border-primary)',
-                              background: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: '0.8rem'
-                            }}
-                          />
-                        </div>
+                        {isSuperAdmin && (
+                          <div style={{ position: 'relative', width: '250px' }}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)' }}>
+                              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                            </svg>
+                            <input
+                              type="text"
+                              placeholder="Search branch..."
+                              value={expandedBranchSearch[group.product.id] || ''}
+                              onChange={e => setExpandedBranchSearch(prev => ({ ...prev, [group.product.id]: e.target.value }))}
+                              style={{
+                                width: '100%', padding: '0.4rem 0.5rem 0.4rem 2rem',
+                                borderRadius: 'var(--radius-md)', border: '1px solid var(--border-primary)',
+                                background: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: '0.8rem'
+                              }}
+                            />
+                          </div>
+                        )}
                       </div>
                       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
                         <thead>
