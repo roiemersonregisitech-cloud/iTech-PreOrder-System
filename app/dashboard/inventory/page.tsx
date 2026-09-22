@@ -238,7 +238,7 @@ export default function InventoryPage() {
   const [search, setSearch] = useState('');
   const [userRole, setUserRole] = useState<string>('cashier');
   const [expandedProductId, setExpandedProductId] = useState<string | null>(null);
-
+  const [expandedBranchSearch, setExpandedBranchSearch] = useState<Record<string, string>>({});
   // Pagination state
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(6);
@@ -796,10 +796,39 @@ export default function InventoryPage() {
                 </div>
 
                 {/* Expanded Branch Inventory Breakdown */}
-                {isExpanded && (
-                  <div className="responsive-table-wrapper" style={{ borderTop: '1px solid var(--border-primary)', background: 'var(--bg-secondary)' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
-                      <thead>
+                {isExpanded && (() => {
+                  const searchStr = (expandedBranchSearch[group.product.id] || '').toLowerCase();
+                  const filteredRows = group.rows.filter(row => {
+                    if (!searchStr) return true;
+                    const branch = row.branch as Branch;
+                    if (!branch) return false;
+                    const target = `${branch.name} ${branch.code}`.toLowerCase();
+                    return searchStr.split(/\s+/).filter(Boolean).every(t => target.includes(t));
+                  });
+
+                  return (
+                    <div className="responsive-table-wrapper" style={{ borderTop: '1px solid var(--border-primary)', background: 'var(--bg-secondary)' }}>
+                      <div style={{ padding: '0.75rem 1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border-secondary)' }}>
+                        <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-heading)' }}>Branch Allocations</span>
+                        <div style={{ position: 'relative', width: '250px' }}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)' }}>
+                            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                          </svg>
+                          <input
+                            type="text"
+                            placeholder="Search branch..."
+                            value={expandedBranchSearch[group.product.id] || ''}
+                            onChange={e => setExpandedBranchSearch(prev => ({ ...prev, [group.product.id]: e.target.value }))}
+                            style={{
+                              width: '100%', padding: '0.4rem 0.5rem 0.4rem 2rem',
+                              borderRadius: 'var(--radius-md)', border: '1px solid var(--border-primary)',
+                              background: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: '0.8rem'
+                            }}
+                          />
+                        </div>
+                      </div>
+                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
+                        <thead>
                         <tr style={{ borderBottom: '1px solid var(--border-secondary)' }}>
                           {['Branch', 'On Hand', 'Reserved', 'Available', 'Delivered', 'Last Updated', ...(isSuperAdmin ? ['Actions'] : [])].map(h => (
                             <th key={h} style={{ padding: '0.6rem 1.25rem', textAlign: 'left', color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.7rem', textTransform: 'uppercase' }}>{h}</th>
@@ -807,14 +836,14 @@ export default function InventoryPage() {
                         </tr>
                       </thead>
                       <tbody>
-                        {group.rows.length === 0 ? (
+                        {filteredRows.length === 0 ? (
                           <tr>
                             <td colSpan={7} style={{ padding: '1rem 1.25rem', color: 'var(--text-muted)' }}>
-                              No branch allocations yet for this product. Use &quot;Allocate to Branch&quot; to assign stock from Central Inventory.
+                              {searchStr ? 'No branches found matching your search.' : 'No branch allocations yet for this product. Use "Allocate to Branch" to assign stock from Central Inventory.'}
                             </td>
                           </tr>
                         ) : (
-                          group.rows.map(row => {
+                          filteredRows.map(row => {
                             const branch = row.branch as Branch;
                             const available = row.qty_on_hand - row.qty_reserved;
                             const branchDelivered = deliveredByProductBranch.get(`${(row.product as Product)?.id}:${row.branch_id}`) || 0;
@@ -894,7 +923,8 @@ export default function InventoryPage() {
                       </tbody>
                     </table>
                   </div>
-                )}
+                );
+                })()}
               </div>
             );
           })
