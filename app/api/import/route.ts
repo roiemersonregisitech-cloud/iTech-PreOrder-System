@@ -98,20 +98,14 @@ export async function POST(request: Request) {
             throw new Error(`Not enough central stock for SKU ${row.SKU} to allocate ${allocQty} to ${allocBranchCode}.`);
           }
 
-          // Deduct from central
-          const { error: updErr } = await supabase.from('products')
-            .update({ central_qty: product.central_qty - allocQty })
-            .eq('id', product.id);
-          if (updErr) throw updErr;
-          product.central_qty -= allocQty;
-
-          // Add to branch inventory
-          const { error: rpcErr } = await supabase.rpc('adjust_inventory', {
-            p_branch_id: branchId,
+          // allocate_central_to_branch deducts from central and adds to branch
+          const { error: rpcErr } = await supabase.rpc('allocate_central_to_branch', {
             p_product_id: product.id,
-            p_qty_change: allocQty
+            p_branch_id: branchId,
+            p_qty: allocQty
           });
           if (rpcErr) throw rpcErr;
+          product.central_qty -= allocQty;
           branchAllocatedCount++;
         }
       }
