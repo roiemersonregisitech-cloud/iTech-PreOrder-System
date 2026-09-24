@@ -85,6 +85,7 @@ export interface Preorder {
   branch_id: string;
   preorder_code: string;
   invoice_no: string;
+  remarks: string;
   status: PreorderStatus;
   created_by: string;
   created_at: string;

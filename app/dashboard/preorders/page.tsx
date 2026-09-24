@@ -229,6 +229,11 @@ export default function PreordersPage() {
                     <div><span style={{ color: 'var(--text-muted)' }}>Created: </span>{new Date(p.created_at).toLocaleDateString()}</div>
                     {reservation?.customer_contact && <div><span style={{ color: 'var(--text-muted)' }}>Contact: </span>{reservation.customer_contact}</div>}
                   </div>
+                  {p.remarks && (
+                    <div style={{ marginTop: '0.5rem', padding: '0.5rem', background: 'var(--bg-tertiary)', borderRadius: 'var(--radius-sm)', fontSize: '0.75rem' }}>
+                      <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>Remarks: </span>{p.remarks}
+                    </div>
+                  )}
 
                   {/* Deliver Button — only for active preorders */}
                   {p.status === 'active' && (

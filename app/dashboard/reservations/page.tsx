@@ -45,6 +45,7 @@ export default function ReservationsPage() {
   // Confirm payment modal
   const [confirmModal, setConfirmModal] = useState<{ reservation: Reservation } | null>(null);
   const [invoiceNo, setInvoiceNo] = useState('');
+  const [remarks, setRemarks] = useState('');
 
   // Preorder code display
   const [preorderCode, setPreorderCode] = useState<string | null>(null);
@@ -212,6 +213,7 @@ export default function ReservationsPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         invoice_no: invoiceNo,
+        remarks: remarks.trim(),
         idempotency_key: idempotencyKey,
       }),
     });
@@ -221,6 +223,7 @@ export default function ReservationsPage() {
       setPreorderCode(data.preorder_code);
       setConfirmModal(null);
       setInvoiceNo('');
+      setRemarks('');
       fetchReservations();
     } else {
       alert(data.error || 'Failed to confirm payment');
@@ -414,7 +417,10 @@ export default function ReservationsPage() {
                     label="Confirm"
                     loadingLabel="Confirming…"
                     variant="primary"
-                    onClick={async () => { setConfirmModal({ reservation: r }); }}
+                    onClick={async () => { 
+                      setConfirmModal({ reservation: r }); 
+                      setRemarks('');
+                    }}
                     style={{ flex: 1 }}
                   />
                   <ActionButton
@@ -753,12 +759,30 @@ export default function ReservationsPage() {
           }}>
             {invoiceNo.length} / {invoiceLength} digits entered {invoiceNo.length === invoiceLength && '✓'}
           </div>
+
+          <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
+            Remarks (Required)
+          </label>
+          <input
+            id="payment-remarks"
+            type="text"
+            value={remarks}
+            onChange={e => setRemarks(e.target.value)}
+            placeholder='e.g., "pickup at itech-x" or "N/A"'
+            style={{
+              width: '100%', padding: '0.6rem 0.8rem', marginBottom: '1.25rem',
+              background: 'var(--bg-input)', border: '1px solid var(--border-primary)',
+              borderRadius: 'var(--radius-md)', color: 'var(--text-primary)',
+              fontSize: '0.9rem', outline: 'none'
+            }}
+          />
+
           <ActionButton
             id="submit-payment"
             label="Confirm Reservation"
             loadingLabel="Confirming…"
             variant="primary"
-            disabled={invoiceNo.length !== invoiceLength}
+            disabled={invoiceNo.length !== invoiceLength || !remarks.trim()}
             onClick={handleConfirmPayment}
             style={{ width: '100%', justifyContent: 'center', padding: '0.7rem' }}
           />
