@@ -154,11 +154,24 @@ export default function PreordersPage() {
       </div>
 
       <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
-        <input id="preorder-search" type="text" value={search} onChange={e => { setSearch(e.target.value); setPage(1); }}
-          placeholder="Search by preorder code…"
-          disabled={loading}
-          style={{ flex: '1 1 280px', padding: '0.6rem 0.8rem', background: 'var(--bg-input)', border: '1px solid var(--border-primary)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)', fontSize: '0.85rem', outline: 'none' }}
-        />
+        <div style={{ position: 'relative', flex: '1 1 300px' }}>
+          <svg style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.3-4.3"/></svg>
+          <input
+            id="preorder-search"
+            type="text"
+            value={search}
+            onChange={e => { setSearch(e.target.value); setPage(1); }}
+            placeholder="Search by code, invoice, customer, or product…"
+            disabled={loading && !search}
+            style={{
+              width: '100%', padding: '0.625rem 1rem 0.625rem 2.5rem',
+              borderRadius: '9999px', border: '1px solid var(--border-primary)',
+              background: 'var(--bg-secondary)', color: 'var(--text-primary)',
+              fontSize: '0.9rem', outline: 'none', transition: 'all 0.2s',
+              opacity: (loading && !search) ? 0.7 : 1
+            }}
+          />
+        </div>
         <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
           {['', 'active', 'fulfilled', 'cancelled'].map(s => (
             <button key={s} onClick={() => { setStatusFilter(s); setPage(1); }} disabled={loading} style={{
