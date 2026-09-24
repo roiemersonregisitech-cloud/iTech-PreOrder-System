@@ -274,7 +274,7 @@ export default function InventoryPage() {
   const [reclaimError, setReclaimError] = useState('');
 
   // SuperAdmin Edit Modal
-  const [editModal, setEditModal] = useState<{ row: InventoryRow, product: Product } | null>(null);
+  const [editModal, setEditModal] = useState<{ product: Product } | null>(null);
   const [editOnHand, setEditOnHand] = useState('');
   const [editReserved, setEditReserved] = useState('');
   const [editCentral, setEditCentral] = useState('');
@@ -694,7 +694,7 @@ export default function InventoryPage() {
           </div>
         ) : (
           paginatedGrouped.map((group, i) => {
-            const isExpanded = !isSuperAdmin || expandedProductId === group.product.id;
+            const isExpanded = isSuperAdmin && expandedProductId === group.product.id;
 
             return (
               <div
@@ -715,7 +715,7 @@ export default function InventoryPage() {
                     gridTemplateColumns: '1fr auto',
                     alignItems: 'center',
                     padding: '1rem 1.25rem',
-                    cursor: 'pointer',
+                    cursor: isSuperAdmin ? 'pointer' : 'default',
                     userSelect: 'none',
                   }}
                 >
@@ -750,9 +750,11 @@ export default function InventoryPage() {
                           </span>
                         )}
                       </div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
-                        {group.rows.length} branch allocation{group.rows.length !== 1 ? 's' : ''}
-                      </div>
+                      {isSuperAdmin && (
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
+                          {group.rows.length} branch allocation{group.rows.length !== 1 ? 's' : ''}
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -762,7 +764,36 @@ export default function InventoryPage() {
                     {isSuperAdmin && (
                       <div style={{ textAlign: 'center', padding: '0.3rem 0.6rem', borderRadius: 'var(--radius-md)', background: 'rgba(99, 102, 241, 0.08)' }}>
                         <div style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--accent-primary)', textTransform: 'uppercase' }}>Central Stock</div>
-                        <div style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--accent-primary)' }}>{group.product.central_qty || 0}</div>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}>
+                          <div style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--accent-primary)' }}>{group.product.central_qty || 0}</div>
+                          <button
+                            id={`edit-central-btn-${group.product.id}`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditModal({ product: group.product });
+                              setEditCentral((group.product.central_qty || 0).toString());
+                              setEditError('');
+                            }}
+                            style={{
+                              background: 'transparent',
+                              border: 'none',
+                              color: 'var(--accent-primary)',
+                              cursor: 'pointer',
+                              padding: '2px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              opacity: 0.7,
+                            }}
+                            onMouseEnter={e => e.currentTarget.style.opacity = '1'}
+                            onMouseLeave={e => e.currentTarget.style.opacity = '0.7'}
+                            title="Edit Central Stock"
+                          >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                            </svg>
+                          </button>
+                        </div>
                       </div>
                     )}
 
@@ -890,29 +921,6 @@ export default function InventoryPage() {
                                             }}
                                           >
                                             Reclaim to Central
-                                          </button>
-                                          <button
-                                            id={`edit-btn-${row.id}`}
-                                            onClick={e => {
-                                              e.stopPropagation();
-                                              setEditModal({ row, product: group.product });
-                                              setEditOnHand(row.qty_on_hand.toString());
-                                              setEditReserved(row.qty_reserved.toString());
-                                              setEditCentral(group.product.central_qty.toString());
-                                              setEditError('');
-                                            }}
-                                            style={{
-                                              padding: '0.25rem 0.5rem',
-                                              borderRadius: 'var(--radius-sm)',
-                                              background: 'rgba(59, 130, 246, 0.1)',
-                                              border: '1px solid rgba(59, 130, 246, 0.3)',
-                                              color: '#3b82f6',
-                                              fontSize: '0.75rem',
-                                              cursor: 'pointer',
-                                              fontWeight: 500,
-                                            }}
-                                          >
-                                            Edit
                                           </button>
                                         </>
                                       )}
