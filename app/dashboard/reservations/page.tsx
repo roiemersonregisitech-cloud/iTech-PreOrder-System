@@ -20,6 +20,7 @@ export default function ReservationsPage() {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>('pending');
   const [search, setSearch] = useState('');
+  const [invoiceLength, setInvoiceLength] = useState(6);
   
   // Pagination state
   const [page, setPage] = useState(1);
@@ -104,7 +105,14 @@ export default function ReservationsPage() {
     initialized.current = true;
 
     (async () => {
-      await Promise.all([fetchStaff(), fetchReservations(), fetchInventory(), fetchProducts(), fetchBranches()]);
+      const [invoiceRes] = await Promise.all([
+        fetch('/api/settings/invoice-format'),
+        fetchStaff(), fetchReservations(), fetchInventory(), fetchProducts(), fetchBranches()
+      ]);
+      if (invoiceRes.ok) {
+        const data = await invoiceRes.json();
+        setInvoiceLength(data.invoice_length || 6);
+      }
       setLoading(false);
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -214,6 +222,8 @@ export default function ReservationsPage() {
       setConfirmModal(null);
       setInvoiceNo('');
       fetchReservations();
+    } else {
+      alert(data.error || 'Failed to confirm payment');
     }
   }
 
@@ -715,28 +725,40 @@ export default function ReservationsPage() {
               </div>
             </div>
           )}
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
+            Please enter exactly the last <strong style={{ color: 'var(--accent-primary)' }}>{invoiceLength} digits</strong> of the ZenPOS invoice.
+          </p>
           <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
-            ZenPOS Invoice #
+            Invoice Numbers (Last {invoiceLength} digits)
           </label>
           <input
             id="invoice-no"
             type="text"
             value={invoiceNo}
-            onChange={e => setInvoiceNo(e.target.value)}
-            placeholder="e.g. INV-12345"
+            onChange={e => {
+              const val = e.target.value.replace(/\D/g, '');
+              if (val.length <= invoiceLength) setInvoiceNo(val);
+            }}
+            placeholder={`e.g. ${'1234567890'.slice(0, invoiceLength)}`}
             style={{
-              width: '100%', padding: '0.6rem 0.8rem', marginBottom: '1.25rem',
+              width: '100%', padding: '0.6rem 0.8rem', marginBottom: '0.5rem',
               background: 'var(--bg-input)', border: '1px solid var(--border-primary)',
               borderRadius: 'var(--radius-md)', color: 'var(--text-primary)',
-              fontSize: '1rem', fontWeight: 600, outline: 'none',
+              fontSize: '1rem', fontWeight: 600, outline: 'none', letterSpacing: '0.1em'
             }}
           />
+          <div style={{
+            fontSize: '0.75rem', fontWeight: 600, marginBottom: '1.25rem',
+            color: invoiceNo.length === invoiceLength ? 'var(--accent-success)' : 'var(--text-muted)'
+          }}>
+            {invoiceNo.length} / {invoiceLength} digits entered {invoiceNo.length === invoiceLength && '✓'}
+          </div>
           <ActionButton
             id="submit-payment"
             label="Confirm Reservation"
             loadingLabel="Confirming…"
             variant="primary"
-            disabled={!invoiceNo.trim()}
+            disabled={invoiceNo.length !== invoiceLength}
             onClick={handleConfirmPayment}
             style={{ width: '100%', justifyContent: 'center', padding: '0.7rem' }}
           />

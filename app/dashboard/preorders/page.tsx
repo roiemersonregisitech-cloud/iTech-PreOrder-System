@@ -17,8 +17,9 @@ export default function PreordersPage() {
 
   // Deliver modal
   const [deliverModal, setDeliverModal] = useState<{ preorder: Preorder } | null>(null);
-  const [confirmCode, setConfirmCode] = useState('');
+  const [confirmInvoiceNo, setConfirmInvoiceNo] = useState('');
   const [deliverError, setDeliverError] = useState('');
+  const [invoiceLength, setInvoiceLength] = useState(6);
 
   // Sales order display
   const [salesOrderResult, setSalesOrderResult] = useState<{ sales_order_number: string; preorder_code: string } | null>(null);
@@ -62,7 +63,14 @@ export default function PreordersPage() {
     if (initialized.current) return;
     initialized.current = true;
     (async () => {
-      await Promise.all([fetchPreorders(), fetchStaff()]);
+      const [invoiceRes] = await Promise.all([
+        fetch('/api/settings/invoice-format'),
+        fetchPreorders(), fetchStaff()
+      ]);
+      if (invoiceRes.ok) {
+        const data = await invoiceRes.json();
+        setInvoiceLength(data.invoice_length || 6);
+      }
       setLoading(false);
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -78,15 +86,15 @@ export default function PreordersPage() {
     if (!deliverModal) return;
     setDeliverError('');
 
-    if (!confirmCode.trim()) {
-      setDeliverError('Please type the preorder code to confirm');
+    if (confirmInvoiceNo.length !== invoiceLength) {
+      setDeliverError(`Please enter exactly ${invoiceLength} digits`);
       return;
     }
 
     const res = await fetch(`/api/preorders/${deliverModal.preorder.id}/deliver`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ preorder_code_confirm: confirmCode.trim() }),
+      body: JSON.stringify({ invoice_no_confirm: confirmInvoiceNo }),
     });
 
     const data = await res.json();
@@ -100,7 +108,7 @@ export default function PreordersPage() {
       preorder_code: data.preorder_code,
     });
     setDeliverModal(null);
-    setConfirmCode('');
+    setConfirmInvoiceNo('');
     setDeliverError('');
     fetchPreorders();
   }
@@ -232,7 +240,7 @@ export default function PreordersPage() {
                         variant="primary"
                         onClick={async () => {
                           setDeliverModal({ preorder: p });
-                          setConfirmCode('');
+                          setConfirmInvoiceNo('');
                           setDeliverError('');
                         }}
                         style={{ width: '100%', justifyContent: 'center', padding: '0.6rem' }}
@@ -307,36 +315,44 @@ export default function PreordersPage() {
           )}
 
           <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>
-            To confirm delivery, please <strong>re-type the preorder code</strong> exactly as shown above.
+            To confirm delivery, please enter the <strong style={{ color: 'var(--accent-primary)' }}>last {invoiceLength} digits</strong> of the ZenPOS invoice.
             This will deduct the item from branch inventory.
           </p>
 
           <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
-            Type Preorder Code to Confirm
+            Type Invoice Numbers (Last {invoiceLength} digits)
           </label>
           <input
-            id="deliver-confirm-code"
+            id="deliver-confirm-invoice"
             type="text"
-            value={confirmCode}
-            onChange={e => setConfirmCode(e.target.value.toUpperCase())}
-            placeholder="e.g. ASUSAYAL-A0001"
+            value={confirmInvoiceNo}
+            onChange={e => {
+              const val = e.target.value.replace(/\D/g, '');
+              if (val.length <= invoiceLength) setConfirmInvoiceNo(val);
+            }}
+            placeholder={`e.g. ${'1234567890'.slice(0, invoiceLength)}`}
             autoComplete="off"
             style={{
               width: '100%', padding: '0.7rem 0.8rem', marginBottom: '0.5rem',
               background: 'var(--bg-input)', border: '1px solid var(--border-primary)',
               borderRadius: 'var(--radius-md)', color: 'var(--text-primary)',
-              fontSize: '1rem', fontWeight: 700, fontFamily: 'monospace',
-              letterSpacing: '0.05em', outline: 'none', textTransform: 'uppercase',
+              fontSize: '1rem', fontWeight: 700, letterSpacing: '0.1em', outline: 'none',
             }}
           />
 
           {/* Match indicator */}
-          {deliverModal && confirmCode.trim() && (
+          {deliverModal && confirmInvoiceNo.length === invoiceLength && (
             <div style={{
               fontSize: '0.75rem', fontWeight: 600, marginBottom: '0.75rem',
-              color: confirmCode.trim() === deliverModal.preorder.preorder_code ? 'var(--accent-success)' : 'var(--accent-danger)',
+              color: confirmInvoiceNo === deliverModal.preorder.invoice_no ? 'var(--accent-success)' : 'var(--accent-danger)',
             }}>
-              {confirmCode.trim() === deliverModal.preorder.preorder_code ? '✓ Code matches' : '✗ Code does not match'}
+              {confirmInvoiceNo === deliverModal.preorder.invoice_no ? '✓ Invoice matches' : '✗ Invoice does not match'}
+            </div>
+          )}
+
+          {deliverModal && confirmInvoiceNo.length > 0 && confirmInvoiceNo.length < invoiceLength && (
+            <div style={{ fontSize: '0.75rem', fontWeight: 600, marginBottom: '0.75rem', color: 'var(--text-muted)' }}>
+              {confirmInvoiceNo.length} / {invoiceLength} digits entered
             </div>
           )}
 
@@ -355,7 +371,7 @@ export default function PreordersPage() {
             label="Confirm Delivery"
             loadingLabel="Processing Delivery…"
             variant="primary"
-            disabled={!deliverModal || confirmCode.trim() !== deliverModal.preorder.preorder_code}
+            disabled={!deliverModal || confirmInvoiceNo !== deliverModal.preorder.invoice_no}
             onClick={handleDeliver}
             style={{ width: '100%', justifyContent: 'center', padding: '0.7rem' }}
           />

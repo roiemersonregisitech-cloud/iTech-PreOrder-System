@@ -21,11 +21,11 @@ export async function POST(
 
     const { id } = await params;
     const body = await request.json();
-    const { preorder_code_confirm } = body;
+    const { invoice_no_confirm } = body;
 
-    if (!preorder_code_confirm || typeof preorder_code_confirm !== 'string' || !preorder_code_confirm.trim()) {
+    if (!invoice_no_confirm || typeof invoice_no_confirm !== 'string' || !invoice_no_confirm.trim()) {
       return NextResponse.json(
-        { error: 'You must re-type the preorder code to confirm delivery' },
+        { error: 'You must re-type the invoice number to confirm delivery' },
         { status: 400 }
       );
     }
@@ -60,14 +60,14 @@ export async function POST(
     // Call the atomic Postgres function
     const { data: result, error } = await supabase.rpc('mark_preorder_delivered', {
       p_preorder_id: id,
-      p_preorder_code_confirm: preorder_code_confirm.trim(),
+      p_invoice_no_confirm: invoice_no_confirm.trim(),
       p_delivered_by: session.userId,
     });
 
     if (error) {
-      if (error.message.includes('PREORDER_CODE_MISMATCH')) {
+      if (error.message.includes('INVOICE_MISMATCH')) {
         return NextResponse.json(
-          { error: 'The preorder code you entered does not match. Please re-type it accurately.', code: 'PREORDER_CODE_MISMATCH' },
+          { error: 'The invoice number you entered does not match. Please re-type it accurately.', code: 'INVOICE_MISMATCH' },
           { status: 400 }
         );
       }

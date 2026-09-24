@@ -13,6 +13,7 @@ interface BranchOverride {
 export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [globalTimeout, setGlobalTimeout] = useState(30);
+  const [invoiceLength, setInvoiceLength] = useState(6);
   const [overrides, setOverrides] = useState<BranchOverride[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [saved, setSaved] = useState(false);
@@ -22,11 +23,18 @@ export default function SettingsPage() {
   const [addTimeout, setAddTimeout] = useState('');
 
   const fetchSettings = useCallback(async () => {
-    const res = await fetch('/api/settings/reservation-timeout');
-    const data = await res.json();
-    if (res.ok) {
-      setGlobalTimeout(data.global_timeout_minutes);
-      setOverrides(data.branch_overrides || []);
+    const [timeoutRes, invoiceRes] = await Promise.all([
+      fetch('/api/settings/reservation-timeout'),
+      fetch('/api/settings/invoice-format')
+    ]);
+    const timeoutData = await timeoutRes.json();
+    const invoiceData = await invoiceRes.json();
+    if (timeoutRes.ok) {
+      setGlobalTimeout(timeoutData.global_timeout_minutes);
+      setOverrides(timeoutData.branch_overrides || []);
+    }
+    if (invoiceRes.ok) {
+      setInvoiceLength(invoiceData.invoice_length || 6);
     }
   }, []);
 
@@ -49,12 +57,19 @@ export default function SettingsPage() {
   }, []);
 
   async function handleSave() {
-    const res = await fetch('/api/settings/reservation-timeout', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ global_timeout_minutes: globalTimeout }),
-    });
-    if (res.ok) {
+    const [timeoutRes, invoiceRes] = await Promise.all([
+      fetch('/api/settings/reservation-timeout', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ global_timeout_minutes: globalTimeout }),
+      }),
+      fetch('/api/settings/invoice-format', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ invoice_length: invoiceLength }),
+      })
+    ]);
+    if (timeoutRes.ok && invoiceRes.ok) {
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     }
@@ -150,6 +165,39 @@ export default function SettingsPage() {
           <ActionButton
             id="save-global-timeout"
             label={saved ? '✓ Saved' : 'Save'}
+            loadingLabel="Saving…"
+            variant="primary"
+            onClick={handleSave}
+          />
+        </div>
+      </div>
+
+      {/* Invoice Settings */}
+      <div className="glass-card" style={{ padding: '1.5rem', marginBottom: '1.5rem' }}>
+        <h2 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-heading)', marginBottom: '0.25rem' }}>
+          Invoice Number Format
+        </h2>
+        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
+          Set the required number of digits for the invoice number when confirming downpayments and marking deliveries. Only numeric characters are allowed.
+        </p>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+          <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
+            Required Digits:
+          </label>
+          <input
+            id="invoice-length"
+            type="number"
+            min={4}
+            max={20}
+            value={invoiceLength}
+            onChange={e => setInvoiceLength(parseInt(e.target.value) || 6)}
+            style={{ ...inputStyle, width: '100px' }}
+          />
+          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>digits</span>
+          <ActionButton
+            id="save-invoice-format"
+            label={saved ? '✓ Saved' : 'Save All Settings'}
             loadingLabel="Saving…"
             variant="primary"
             onClick={handleSave}
