@@ -75,7 +75,7 @@ export interface Reservation {
   cashier?: Staff;
   preorder?: {
     preorder_code: string;
-    downpayment_amount: number;
+    invoice_no: string;
   } | null;
 }
 
@@ -84,8 +84,7 @@ export interface Preorder {
   reservation_id: string;
   branch_id: string;
   preorder_code: string;
-  downpayment_amount: number;
-  downpayment_received_at: string;
+  invoice_no: string;
   status: PreorderStatus;
   created_by: string;
   created_at: string;
@@ -109,7 +108,7 @@ export interface DeliveredItem {
   customer_contact: string | null;
   customer_address: string | null;
   preorder_code: string;
-  downpayment_amount: number;
+  invoice_no: string;
   created_at: string;
   // Joined
   branch?: Branch;
@@ -193,7 +192,7 @@ export interface CancelReservationRequest {
 }
 
 export interface ConfirmPaymentRequest {
-  amount: number;
+  invoice_no: string;
   idempotency_key: string;
 }
 

@@ -149,7 +149,7 @@ export default function PreordersPage() {
       <div className="page-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
           <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-heading)' }}>Preorders</h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Confirmed reservations with downpayment</p>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Confirmed reservations with ZenPOS invoice</p>
         </div>
       </div>
 
@@ -203,7 +203,7 @@ export default function PreordersPage() {
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>SKU: {product?.sku} • Qty Reserved: {reservation?.qty}</div>
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.4rem', fontSize: '0.8rem' }}>
-                    <div><span style={{ color: 'var(--text-muted)' }}>Downpayment: </span><span style={{ fontWeight: 600, color: 'var(--accent-success)' }}>₱{Number(p.downpayment_amount).toLocaleString('en-PH', { minimumFractionDigits: 2 })}</span></div>
+                    <div><span style={{ color: 'var(--text-muted)' }}>Invoice: </span><span style={{ fontWeight: 600, color: 'var(--accent-success)' }}>{p.invoice_no}</span></div>
                     {reservation?.customer_name && <div><span style={{ color: 'var(--text-muted)' }}>Customer: </span>{reservation.customer_name}</div>}
                     <div><span style={{ color: 'var(--text-muted)' }}>Created: </span>{new Date(p.created_at).toLocaleDateString()}</div>
                     {reservation?.customer_contact && <div><span style={{ color: 'var(--text-muted)' }}>Contact: </span>{reservation.customer_contact}</div>}

@@ -50,7 +50,6 @@ export default function DeliveriesPage() {
   // Summary stats
   const totalDelivered = deliveries.length;
   const totalQty = deliveries.reduce((sum, d) => sum + d.qty, 0);
-  const totalDownpayment = deliveries.reduce((sum, d) => sum + Number(d.downpayment_amount), 0);
 
   return (
     <div className="animate-fade-in">
@@ -73,10 +72,6 @@ export default function DeliveriesPage() {
         <div className="glass-card" style={{ padding: '1rem' }}>
           <div style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.25rem' }}>Units Delivered</div>
           <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--accent-success)' }}>{totalQty}</div>
-        </div>
-        <div className="glass-card" style={{ padding: '1rem' }}>
-          <div style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.25rem' }}>Total Downpayments</div>
-          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--accent-warning)' }}>₱{totalDownpayment.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</div>
         </div>
       </div>
 
@@ -178,9 +173,9 @@ export default function DeliveriesPage() {
                   {/* Details */}
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.4rem', fontSize: '0.8rem' }}>
                     <div>
-                      <span style={{ color: 'var(--text-muted)' }}>Downpayment: </span>
+                      <span style={{ color: 'var(--text-muted)' }}>Invoice: </span>
                       <span style={{ fontWeight: 600, color: 'var(--accent-success)' }}>
-                        ₱{Number(d.downpayment_amount).toLocaleString('en-PH', { minimumFractionDigits: 2 })}
+                        {d.invoice_no}
                       </span>
                     </div>
                     {d.customer_name && (

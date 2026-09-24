@@ -43,7 +43,7 @@ export default function ReservationsPage() {
 
   // Confirm payment modal
   const [confirmModal, setConfirmModal] = useState<{ reservation: Reservation } | null>(null);
-  const [paymentAmount, setPaymentAmount] = useState('');
+  const [invoiceNo, setInvoiceNo] = useState('');
 
   // Preorder code display
   const [preorderCode, setPreorderCode] = useState<string | null>(null);
@@ -203,7 +203,7 @@ export default function ReservationsPage() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        amount: parseFloat(paymentAmount),
+        invoice_no: invoiceNo,
         idempotency_key: idempotencyKey,
       }),
     });
@@ -212,7 +212,7 @@ export default function ReservationsPage() {
     if (res.ok) {
       setPreorderCode(data.preorder_code);
       setConfirmModal(null);
-      setPaymentAmount('');
+      setInvoiceNo('');
       fetchReservations();
     }
   }
@@ -401,7 +401,7 @@ export default function ReservationsPage() {
                 <div style={{ display: 'flex', gap: '0.5rem', paddingTop: '0.5rem', borderTop: '1px solid var(--border-secondary)' }}>
                   <ActionButton
                     id={`confirm-payment-${r.id}`}
-                    label="Confirm Downpayment"
+                    label="Confirm"
                     loadingLabel="Confirming…"
                     variant="primary"
                     onClick={async () => { setConfirmModal({ reservation: r }); }}
@@ -700,7 +700,7 @@ export default function ReservationsPage() {
       </Modal>
 
       {/* Confirm Payment Modal */}
-      <Modal isOpen={!!confirmModal} onClose={() => setConfirmModal(null)} title="Confirm Downpayment">
+      <Modal isOpen={!!confirmModal} onClose={() => setConfirmModal(null)} title="Confirm Reservation">
         <div>
           {confirmModal && (
             <div style={{
@@ -716,16 +716,14 @@ export default function ReservationsPage() {
             </div>
           )}
           <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
-            Downpayment Amount (₱)
+            ZenPOS Invoice #
           </label>
           <input
-            id="payment-amount"
-            type="number"
-            min={0}
-            step={0.01}
-            value={paymentAmount}
-            onChange={e => setPaymentAmount(e.target.value)}
-            placeholder="0.00"
+            id="invoice-no"
+            type="text"
+            value={invoiceNo}
+            onChange={e => setInvoiceNo(e.target.value)}
+            placeholder="e.g. INV-12345"
             style={{
               width: '100%', padding: '0.6rem 0.8rem', marginBottom: '1.25rem',
               background: 'var(--bg-input)', border: '1px solid var(--border-primary)',
@@ -735,10 +733,10 @@ export default function ReservationsPage() {
           />
           <ActionButton
             id="submit-payment"
-            label="Confirm Payment"
+            label="Confirm Reservation"
             loadingLabel="Confirming…"
             variant="primary"
-            disabled={!paymentAmount || parseFloat(paymentAmount) <= 0}
+            disabled={!invoiceNo.trim()}
             onClick={handleConfirmPayment}
             style={{ width: '100%', justifyContent: 'center', padding: '0.7rem' }}
           />
@@ -749,7 +747,7 @@ export default function ReservationsPage() {
       <Modal isOpen={!!preorderCode} onClose={() => setPreorderCode(null)} title="Preorder Confirmed! 🎉">
         <div style={{ textAlign: 'center' }}>
           <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
-            Downpayment received. Your preorder code is:
+            Preorder confirmed. Your preorder code is:
           </p>
           <div
             id="preorder-code-display"

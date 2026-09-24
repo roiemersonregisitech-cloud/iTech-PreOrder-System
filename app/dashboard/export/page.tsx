@@ -23,7 +23,7 @@ export default async function ExportPage() {
     id,
     preorder_code,
     status,
-    downpayment_amount,
+    invoice_no,
     created_at,
     branch:branches(id, name),
     reservation:reservations(
@@ -44,7 +44,7 @@ export default async function ExportPage() {
     id: string;
     preorder_code: string;
     status: string;
-    downpayment_amount: number;
+    invoice_no: string;
     created_at: string;
     branch: { id: string; name: string } | null;
     reservation: {
@@ -57,7 +57,7 @@ export default async function ExportPage() {
     id: row.id,
     preorder_code: row.preorder_code,
     status: row.status,
-    downpayment_amount: row.downpayment_amount,
+    invoice_no: row.invoice_no,
     created_at: row.created_at,
     branch_name: row.branch?.name || "Unknown",
     qty: row.reservation?.qty || 1,

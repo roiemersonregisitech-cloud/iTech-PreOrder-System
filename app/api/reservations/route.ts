@@ -118,7 +118,7 @@ export async function GET(request: NextRequest) {
 
     let query = supabase
       .from('reservations')
-      .select('*, product:products(*), branch:branches(*), cashier:staff!reservations_cashier_id_fkey(*), preorder:preorders(preorder_code, downpayment_amount)', { count: 'exact' })
+      .select('*, product:products(*), branch:branches(*), cashier:staff!reservations_cashier_id_fkey(*), preorder:preorders(preorder_code, invoice_no)', { count: 'exact' })
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
 

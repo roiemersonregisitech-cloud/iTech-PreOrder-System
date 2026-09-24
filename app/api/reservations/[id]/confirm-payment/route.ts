@@ -16,11 +16,11 @@ export async function POST(
 
     const { id } = await params;
     const body = await request.json();
-    const { amount, idempotency_key } = body;
+    const { invoice_no, idempotency_key } = body;
 
-    if (!amount || amount <= 0 || !idempotency_key) {
+    if (!invoice_no || typeof invoice_no !== 'string' || !idempotency_key) {
       return NextResponse.json(
-        { error: 'Missing required fields: amount (positive number), idempotency_key' },
+        { error: 'Missing required fields: invoice_no, idempotency_key' },
         { status: 400 }
       );
     }
@@ -72,7 +72,7 @@ export async function POST(
     // Call the Postgres function
     const { data: preorderCode, error } = await supabase.rpc('confirm_downpayment', {
       p_reservation_id: id,
-      p_amount: amount,
+      p_invoice_no: invoice_no,
       p_created_by: session.userId,
       p_idempotency_key: idempotency_key,
     });
@@ -102,7 +102,7 @@ export async function POST(
       entityId: id,
       metadata: {
         preorder_code: preorderCode,
-        downpayment_amount: amount,
+        invoice_no: invoice_no,
         branch_id: reservation.branch_id,
       },
       request,
