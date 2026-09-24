@@ -7,6 +7,7 @@ type PreorderRow = {
   preorder_code: string;
   status: string;
   invoice_no: string;
+  remarks: string;
   created_at: string;
   branch_name: string;
   qty: number;
@@ -42,6 +43,7 @@ export function ExportManager({ data, branches, skus, statuses, isSuperAdmin, st
     { key: "product_name", label: "Product Name" },
     { key: "qty", label: "Quantity" },
     { key: "invoice_no", label: "Invoice No" },
+    { key: "remarks", label: "Remarks" },
     { key: "status", label: "Status" },
   ];
 
