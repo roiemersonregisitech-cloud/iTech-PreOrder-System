@@ -188,7 +188,7 @@ export default function BranchesPage() {
             Active
           </label>
           {editError && <div style={{ padding: '0.5rem', borderRadius: 'var(--radius-md)', background: 'var(--accent-danger-bg)', color: 'var(--accent-danger)', fontSize: '0.8rem', marginBottom: '0.75rem' }}>{editError}</div>}
-          <ActionButton label="Save Changes" loadingLabel="Saving…" variant="primary" onClick={handleEdit}
+          <ActionButton id="save-branch-edit" label="Save Changes" loadingLabel="Saving…" variant="primary" onClick={handleEdit}
             disabled={!editName} style={{ width: '100%', justifyContent: 'center', padding: '0.7rem' }} />
         </div>
       </Modal>
@@ -209,7 +209,7 @@ export default function BranchesPage() {
             >
               Cancel
             </button>
-            <ActionButton label="Delete" loadingLabel="Deleting…" variant="danger" onClick={handleDelete}
+            <ActionButton id="confirm-delete-branch" label="Delete" loadingLabel="Deleting…" variant="danger" onClick={handleDelete}
               style={{ flex: 1, justifyContent: 'center', padding: '0.7rem' }} />
           </div>
         </div>
