@@ -150,7 +150,10 @@ export default function ReservationsPage() {
     const inv = inventory.find(
       i => i.branch_id === targetBranch && (i.product as Product)?.id === selectedProduct
     );
-    if (!inv) {
+    const prod = products.find(p => p.id === selectedProduct);
+    const isBackorderEligible = backorderEnabled && prod?.backorder_allowed;
+
+    if (!inv && !isBackorderEligible) {
       setReserveError('Product stock not found for the selected branch');
       return;
     }
