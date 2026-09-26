@@ -11,7 +11,7 @@ const CANCEL_REASONS: CancelReason[] = [
   'Other',
 ];
 
-export default function ReservationsPage() {
+export default function CreateBackorderPage() {
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [inventory, setInventory] = useState<InventoryRow[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -147,12 +147,8 @@ export default function ReservationsPage() {
       return;
     }
 
-    const inv = inventory.find(
-      i => i.branch_id === targetBranch && (i.product as Product)?.id === selectedProduct
-    );
-
-    if (!inv || (inv.qty_on_hand - inv.qty_reserved) < reserveQty) {
-      setReserveError('Insufficient stock for the selected branch');
+    if (!backorderEnabled) {
+      setReserveError('Backorders are currently disabled globally in settings.');
       return;
     }
 
@@ -239,7 +235,7 @@ export default function ReservationsPage() {
 
   const searchTerms = productSearch.toLowerCase().split(/\s+/).filter(Boolean);
   const filteredProducts = products.filter((p: Product) => {
-    if (!p.is_active) return false;
+    if (!p.is_active || !p.backorder_allowed) return false;
     if (searchTerms.length === 0) return true;
     const searchTarget = `${p.name} ${p.sku}`.toLowerCase();
     return searchTerms.every(term => searchTarget.includes(term));
@@ -252,8 +248,8 @@ export default function ReservationsPage() {
       {/* Header */}
       <div className="page-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-heading)' }}>Reservations</h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Manage item reservations and preorders</p>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-heading)' }}>Create Backorder</h1>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Create backorders for out-of-stock items</p>
         </div>
         <button
           id="new-reservation-btn"
@@ -268,7 +264,7 @@ export default function ReservationsPage() {
           }}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          New Reservation
+          Create Backorder
         </button>
       </div>
 
@@ -559,8 +555,9 @@ export default function ReservationsPage() {
                          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '3rem', opacity: 0.5 }}>📦</div>
                        )}
                        {avail <= 0 && (
-                          <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: '1.2rem' }}>
-                            OUT OF STOCK
+                          <div style={{ position: 'absolute', top: '0.5rem', right: '0.5rem', background: 'var(--accent-warning)', color: 'white', fontWeight: 700, fontSize: '0.65rem', padding: '0.3rem 0.6rem', borderRadius: '1rem', display: 'flex', alignItems: 'center', gap: '0.2rem', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                            BACKORDER
                           </div>
                        )}
                     </div>
@@ -687,12 +684,10 @@ export default function ReservationsPage() {
             </div>
           )}
 
-
-
           <ActionButton
             id="submit-reservation"
-            label="Reserve Item"
-            loadingLabel="Reserving…"
+            label="Create Backorder"
+            loadingLabel="Creating…"
             variant="primary"
             disabled={!selectedProduct}
             onClick={handleReserve}

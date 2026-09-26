@@ -226,6 +226,20 @@ export default function ProductsPage() {
     fetchProducts();
   }
 
+  // Handle Mark All Backorder
+  async function handleMarkAllBackorder() {
+    if (!confirm('Are you sure you want to allow backorder for all products?')) return;
+    const res = await fetch('/api/products/mark-all-backorder', {
+      method: 'POST',
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      alert(data.error || 'Failed to mark all products');
+      return;
+    }
+    fetchProducts();
+  }
+
   const inputStyle: React.CSSProperties = {
     width: '100%',
     padding: '0.6rem 0.8rem',
@@ -260,29 +274,53 @@ export default function ProductsPage() {
             style={{ ...inputStyle, width: '220px', marginBottom: 0, opacity: loading ? 0.7 : 1 }}
           />
           {isSuperAdmin && (
-            <button
-              id="create-product-btn"
-              onClick={() => setShowCreate(true)}
-              disabled={loading}
-              style={{
-                padding: '0.6rem 1rem',
-                borderRadius: 'var(--radius-md)',
-                background: 'var(--accent-primary)',
-                color: 'white',
-                border: 'none',
-                fontSize: '0.85rem',
-                fontWeight: 600,
-                cursor: loading ? 'not-allowed' : 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.4rem',
-                whiteSpace: 'nowrap',
-                opacity: loading ? 0.7 : 1
-              }}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              Add Product
-            </button>
+            <>
+              <button
+                id="mark-all-backorder-btn"
+                onClick={handleMarkAllBackorder}
+                disabled={loading}
+                style={{
+                  padding: '0.6rem 1rem',
+                  borderRadius: 'var(--radius-md)',
+                  background: 'var(--bg-tertiary)',
+                  border: '1px solid var(--border-primary)',
+                  color: 'var(--text-primary)',
+                  fontSize: '0.85rem',
+                  fontWeight: 600,
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                  whiteSpace: 'nowrap',
+                  opacity: loading ? 0.7 : 1
+                }}
+              >
+                Mark All Allow Backorder
+              </button>
+              <button
+                id="create-product-btn"
+                onClick={() => setShowCreate(true)}
+                disabled={loading}
+                style={{
+                  padding: '0.6rem 1rem',
+                  borderRadius: 'var(--radius-md)',
+                  background: 'var(--accent-primary)',
+                  color: 'white',
+                  border: 'none',
+                  fontSize: '0.85rem',
+                  fontWeight: 600,
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                  whiteSpace: 'nowrap',
+                  opacity: loading ? 0.7 : 1
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Add Product
+              </button>
+            </>
           )}
         </div>
       </div>
