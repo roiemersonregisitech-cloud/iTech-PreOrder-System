@@ -71,15 +71,15 @@ export function ExportManager({ data, branches, skus, statuses, isSuperAdmin, st
       
       if (filterStartDate) {
         const rowDate = new Date(row.created_at);
-        const startDate = new Date(filterStartDate);
-        startDate.setHours(0, 0, 0, 0);
+        const [year, month, day] = filterStartDate.split("-");
+        const startDate = new Date(Number(year), Number(month) - 1, Number(day), 0, 0, 0, 0);
         if (rowDate < startDate) return false;
       }
       
       if (filterEndDate) {
         const rowDate = new Date(row.created_at);
-        const endDate = new Date(filterEndDate);
-        endDate.setHours(23, 59, 59, 999);
+        const [year, month, day] = filterEndDate.split("-");
+        const endDate = new Date(Number(year), Number(month) - 1, Number(day), 23, 59, 59, 999);
         if (rowDate > endDate) return false;
       }
       
