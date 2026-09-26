@@ -240,6 +240,7 @@ export default function InventoryPage() {
   const [userRole, setUserRole] = useState<string>('cashier');
   const [expandedProductId, setExpandedProductId] = useState<string | null>(null);
   const [expandedBranchSearch, setExpandedBranchSearch] = useState<Record<string, string>>({});
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
   // Pagination state
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(6);
@@ -591,8 +592,36 @@ export default function InventoryPage() {
   const totalPages = Math.ceil(grouped.length / pageSize);
   const paginatedGrouped = grouped.slice((page - 1) * pageSize, page * pageSize);
 
+  function showToast(msg: string) {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3000);
+  }
+
   return (
     <div className="animate-fade-in">
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div style={{
+          position: 'fixed',
+          bottom: '2rem',
+          right: '2rem',
+          background: 'var(--bg-card)',
+          color: 'var(--text-primary)',
+          padding: '1rem 1.5rem',
+          borderRadius: 'var(--radius-lg)',
+          boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
+          border: '1px solid var(--border-primary)',
+          zIndex: 9999,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.75rem',
+          animation: 'fade-in 0.3s ease-out'
+        }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-success)" strokeWidth="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>{toastMessage}</span>
+        </div>
+      )}
+
       {/* Header */}
       <div className="page-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
@@ -749,6 +778,7 @@ export default function InventoryPage() {
                           onClick={(e) => {
                             e.stopPropagation();
                             navigator.clipboard.writeText(group.product.sku);
+                            showToast('Copied to Clipboard');
                           }}
                           title="Click to copy SKU"
                           style={{ fontFamily: 'monospace', fontSize: '0.75rem', color: 'var(--accent-primary)', fontWeight: 600, background: 'rgba(99, 102, 241, 0.1)', padding: '0.1rem 0.4rem', borderRadius: '4px', cursor: 'pointer' }}>
