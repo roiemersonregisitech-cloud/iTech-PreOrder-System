@@ -12,6 +12,16 @@ export default function BranchesPage() {
   const [newName, setNewName] = useState('');
   const [createError, setCreateError] = useState('');
 
+  // Edit State
+  const [editingBranch, setEditingBranch] = useState<Branch | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editIsActive, setEditIsActive] = useState(true);
+  const [editError, setEditError] = useState('');
+
+  // Delete State
+  const [deletingBranch, setDeletingBranch] = useState<Branch | null>(null);
+  const [deleteError, setDeleteError] = useState('');
+
   // Pagination State
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -44,6 +54,32 @@ export default function BranchesPage() {
     const data = await res.json();
     if (!res.ok) { setCreateError(data.error); return; }
     setShowCreate(false); setNewCode(''); setNewName('');
+    fetchBranches();
+  }
+
+  async function handleEdit() {
+    if (!editingBranch) return;
+    setEditError('');
+    const res = await fetch(`/api/branches/${editingBranch.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: editName, is_active: editIsActive }),
+    });
+    const data = await res.json();
+    if (!res.ok) { setEditError(data.error); return; }
+    setEditingBranch(null);
+    fetchBranches();
+  }
+
+  async function handleDelete() {
+    if (!deletingBranch) return;
+    setDeleteError('');
+    const res = await fetch(`/api/branches/${deletingBranch.id}`, {
+      method: 'DELETE',
+    });
+    const data = await res.json();
+    if (!res.ok) { setDeleteError(data.error); return; }
+    setDeletingBranch(null);
     fetchBranches();
   }
 
@@ -91,8 +127,28 @@ export default function BranchesPage() {
               </span>
             </div>
             <div style={{ fontWeight: 600, fontSize: '0.95rem', color: 'var(--text-heading)' }}>{b.name}</div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
-              Created {new Date(b.created_at).toLocaleDateString()}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid var(--border-secondary)' }}>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                Created {new Date(b.created_at).toLocaleDateString()}
+              </div>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button
+                  onClick={() => {
+                    setEditingBranch(b);
+                    setEditName(b.name);
+                    setEditIsActive(b.is_active);
+                  }}
+                  style={{ background: 'transparent', border: 'none', color: 'var(--accent-primary)', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600 }}
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={() => setDeletingBranch(b)}
+                  style={{ background: 'transparent', border: 'none', color: 'var(--accent-danger)', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600 }}
+                >
+                  Delete
+                </button>
+              </div>
             </div>
           </div>
         ))}
@@ -118,6 +174,44 @@ export default function BranchesPage() {
           {createError && <div style={{ padding: '0.5rem', borderRadius: 'var(--radius-md)', background: 'var(--accent-danger-bg)', color: 'var(--accent-danger)', fontSize: '0.8rem', marginBottom: '0.75rem' }}>{createError}</div>}
           <ActionButton id="submit-branch" label="Create Branch" loadingLabel="Creating…" variant="primary" onClick={handleCreate}
             disabled={!newCode || !newName} style={{ width: '100%', justifyContent: 'center', padding: '0.7rem' }} />
+        </div>
+      </Modal>
+
+      <Modal isOpen={!!editingBranch} onClose={() => setEditingBranch(null)} title="Edit Branch">
+        <div>
+          <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>Branch Code</label>
+          <input value={editingBranch?.code || ''} disabled style={{ ...inputStyle, opacity: 0.6, cursor: 'not-allowed' }} />
+          <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>Branch Name</label>
+          <input value={editName} onChange={e => setEditName(e.target.value)} placeholder="e.g. Asus Ayala Branch" style={inputStyle} />
+          <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '1rem', cursor: 'pointer' }}>
+            <input type="checkbox" checked={editIsActive} onChange={e => setEditIsActive(e.target.checked)} style={{ accentColor: 'var(--accent-primary)', width: '16px', height: '16px' }} />
+            Active
+          </label>
+          {editError && <div style={{ padding: '0.5rem', borderRadius: 'var(--radius-md)', background: 'var(--accent-danger-bg)', color: 'var(--accent-danger)', fontSize: '0.8rem', marginBottom: '0.75rem' }}>{editError}</div>}
+          <ActionButton label="Save Changes" loadingLabel="Saving…" variant="primary" onClick={handleEdit}
+            disabled={!editName} style={{ width: '100%', justifyContent: 'center', padding: '0.7rem' }} />
+        </div>
+      </Modal>
+
+      <Modal isOpen={!!deletingBranch} onClose={() => setDeletingBranch(null)} title="Delete Branch">
+        <div>
+          <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
+            Are you sure you want to delete <strong style={{ color: 'var(--text-primary)' }}>{deletingBranch?.name}</strong>? This action cannot be undone.
+          </p>
+          <p style={{ fontSize: '0.8rem', color: 'var(--accent-warning)', background: 'rgba(245, 158, 11, 0.1)', padding: '0.5rem', borderRadius: '4px', marginBottom: '1rem' }}>
+            Note: Deletion will fail if the branch has existing transactions, registered staff, or non-zero inventory stock.
+          </p>
+          {deleteError && <div style={{ padding: '0.5rem', borderRadius: 'var(--radius-md)', background: 'var(--accent-danger-bg)', color: 'var(--accent-danger)', fontSize: '0.8rem', marginBottom: '0.75rem' }}>{deleteError}</div>}
+          <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+            <button
+              onClick={() => setDeletingBranch(null)}
+              style={{ flex: 1, padding: '0.7rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-primary)', background: 'transparent', color: 'var(--text-primary)', cursor: 'pointer', fontWeight: 600 }}
+            >
+              Cancel
+            </button>
+            <ActionButton label="Delete" loadingLabel="Deleting…" variant="danger" onClick={handleDelete}
+              style={{ flex: 1, justifyContent: 'center', padding: '0.7rem' }} />
+          </div>
         </div>
       </Modal>
     </div>

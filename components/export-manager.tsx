@@ -117,9 +117,18 @@ export function ExportManager({ data, branches, skus, statuses, isSuperAdmin, st
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
 
+    let filenameDate = new Date().toISOString().split("T")[0];
+    if (filterStartDate && filterEndDate) {
+      filenameDate = `${filterStartDate}_to_${filterEndDate}`;
+    } else if (filterStartDate) {
+      filenameDate = `from_${filterStartDate}`;
+    } else if (filterEndDate) {
+      filenameDate = `until_${filterEndDate}`;
+    }
+
     const link = document.createElement("a");
     link.href = url;
-    link.setAttribute("download", `preorders_export_${new Date().toISOString().split("T")[0]}.csv`);
+    link.setAttribute("download", `preorders_export_${filenameDate}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
