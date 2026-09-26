@@ -34,6 +34,7 @@ export interface InventoryRow {
   product_id: string;
   qty_on_hand: number;
   qty_reserved: number;
+  qty_backordered: number;
   updated_at: string;
   // Derived
   qty_available?: number;

@@ -70,6 +70,11 @@ export async function GET(request: NextRequest) {
       query = query.eq('status', status);
     }
 
+    const isBackorder = searchParams.get('is_backorder');
+    if (isBackorder === 'true') {
+      query = query.eq('is_backorder', true);
+    }
+
     const { data, error, count } = await query;
 
     if (error) {

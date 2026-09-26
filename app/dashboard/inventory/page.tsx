@@ -9,6 +9,7 @@ interface GroupedProduct {
   rows: InventoryRow[];
   totalOnHand: number;
   totalReserved: number;
+  totalBackordered: number;
   totalAvailable: number;
   totalDelivered: number;
 }
@@ -364,6 +365,7 @@ export default function InventoryPage() {
         rows: [],
         totalOnHand: 0,
         totalReserved: 0,
+        totalBackordered: 0,
         totalAvailable: 0,
         totalDelivered: deliveredByProduct.get(prod.id) || 0,
       });
@@ -378,6 +380,7 @@ export default function InventoryPage() {
         existing.rows.push(row);
         existing.totalOnHand += row.qty_on_hand;
         existing.totalReserved += row.qty_reserved;
+        existing.totalBackordered += row.qty_backordered;
         existing.totalAvailable += row.qty_on_hand - row.qty_reserved;
       } else {
         map.set(product.id, {
@@ -385,6 +388,7 @@ export default function InventoryPage() {
           rows: [row],
           totalOnHand: row.qty_on_hand,
           totalReserved: row.qty_reserved,
+          totalBackordered: row.qty_backordered,
           totalAvailable: row.qty_on_hand - row.qty_reserved,
           totalDelivered: deliveredByProduct.get(product.id) || 0,
         });
@@ -808,6 +812,11 @@ export default function InventoryPage() {
                     </div>
 
                     <div style={{ textAlign: 'center' }}>
+                      <div style={{ fontSize: '0.65rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Backordered</div>
+                      <div style={{ fontSize: '1.1rem', fontWeight: 800, color: group.totalBackordered > 0 ? 'var(--accent-danger)' : 'var(--text-muted)' }}>{group.totalBackordered}</div>
+                    </div>
+
+                    <div style={{ textAlign: 'center' }}>
                       <div style={{ fontSize: '0.65rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Available</div>
                       <span style={{
                         display: 'inline-block',
@@ -863,7 +872,7 @@ export default function InventoryPage() {
                       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
                         <thead>
                         <tr style={{ borderBottom: '1px solid var(--border-secondary)' }}>
-                          {['Branch', 'On Hand', 'Reserved', 'Available', 'Delivered', 'Last Updated', ...(isSuperAdmin ? ['Actions'] : [])].map(h => (
+                          {['Branch', 'On Hand', 'Reserved', 'Backordered', 'Available', 'Delivered', 'Last Updated', ...(isSuperAdmin ? ['Actions'] : [])].map(h => (
                             <th key={h} style={{ padding: '0.6rem 1.25rem', textAlign: 'left', color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.7rem', textTransform: 'uppercase' }}>{h}</th>
                           ))}
                         </tr>
@@ -888,6 +897,7 @@ export default function InventoryPage() {
                                 </td>
                                 <td style={{ padding: '0.66rem 1.25rem', fontWeight: 700 }}>{row.qty_on_hand}</td>
                                 <td style={{ padding: '0.66rem 1.25rem', color: row.qty_reserved > 0 ? 'var(--accent-warning)' : 'var(--text-muted)' }}>{row.qty_reserved}</td>
+                                <td style={{ padding: '0.66rem 1.25rem', color: row.qty_backordered > 0 ? 'var(--accent-danger)' : 'var(--text-muted)' }}>{row.qty_backordered}</td>
                                 <td style={{ padding: '0.66rem 1.25rem' }}>
                                   <span style={{ fontWeight: 700, color: 'var(--accent-success)' }}>{available}</span>
                                 </td>
