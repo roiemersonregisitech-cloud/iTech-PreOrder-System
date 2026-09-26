@@ -101,6 +101,7 @@ export function ExportManager({ data, branches, skus, statuses, isSuperAdmin, st
         .map((c) => {
           let val = row[c.key as keyof PreorderRow];
           if (val === null || val === undefined) val = "";
+          if (typeof val === "boolean") val = val ? "Yes" : "No";
           if (c.key === "created_at" && val) {
             val = new Date(val).toLocaleString();
           }
