@@ -745,7 +745,13 @@ export default function InventoryPage() {
                     <div style={{ minWidth: 0 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
                         <span style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-heading)' }}>{group.product.name}</span>
-                        <span style={{ fontFamily: 'monospace', fontSize: '0.75rem', color: 'var(--accent-primary)', fontWeight: 600, background: 'rgba(99, 102, 241, 0.1)', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>
+                        <span 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigator.clipboard.writeText(group.product.sku);
+                          }}
+                          title="Click to copy SKU"
+                          style={{ fontFamily: 'monospace', fontSize: '0.75rem', color: 'var(--accent-primary)', fontWeight: 600, background: 'rgba(99, 102, 241, 0.1)', padding: '0.1rem 0.4rem', borderRadius: '4px', cursor: 'pointer' }}>
                           {group.product.sku}
                         </span>
                         {group.product.unit_price && (
