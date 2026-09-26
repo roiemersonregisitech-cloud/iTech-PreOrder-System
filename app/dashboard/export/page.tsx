@@ -31,6 +31,7 @@ export default async function ExportPage() {
       qty,
       customer_name,
       customer_contact,
+      is_backorder,
       product:products(id, sku, name)
     )
   `);
@@ -53,6 +54,7 @@ export default async function ExportPage() {
       qty: number;
       customer_name: string | null;
       customer_contact: string | null;
+      is_backorder: boolean;
       product: { id: string; sku: string; name: string } | null;
     } | null;
   }>).map((row) => ({
@@ -68,6 +70,7 @@ export default async function ExportPage() {
     customer_contact: row.reservation?.customer_contact || "",
     sku: row.reservation?.product?.sku || "",
     product_name: row.reservation?.product?.name || "",
+    is_backorder: row.reservation?.is_backorder || false,
   })) : [];
 
   // Get distinct branches and SKUs for filtering

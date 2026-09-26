@@ -152,6 +152,19 @@ export default function DeliveriesPage() {
                       <polyline points="14,2 14,8 20,8"/>
                     </svg>
                     {d.preorder_code}
+                    {d.is_backorder && (
+                      <span style={{ 
+                        marginLeft: 'auto', 
+                        fontSize: '0.65rem', 
+                        fontWeight: 700, 
+                        color: 'var(--accent-warning)', 
+                        background: 'rgba(245, 158, 11, 0.1)', 
+                        padding: '0.15rem 0.4rem', 
+                        borderRadius: '4px' 
+                      }}>
+                        BACKORDER
+                      </span>
+                    )}
                   </div>
 
                   {/* Branch */}

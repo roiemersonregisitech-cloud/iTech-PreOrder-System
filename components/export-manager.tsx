@@ -15,6 +15,7 @@ type PreorderRow = {
   customer_contact: string;
   sku: string;
   product_name: string;
+  is_backorder: boolean;
 };
 
 interface ExportManagerProps {
@@ -44,6 +45,7 @@ export function ExportManager({ data, branches, skus, statuses, isSuperAdmin, st
     { key: "qty", label: "Quantity" },
     { key: "invoice_no", label: "Invoice No" },
     { key: "remarks", label: "Remarks" },
+    { key: "is_backorder", label: "Is Backorder" },
     { key: "status", label: "Status" },
   ];
 

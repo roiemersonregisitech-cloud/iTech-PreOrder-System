@@ -114,6 +114,7 @@ export interface DeliveredItem {
   customer_address: string | null;
   preorder_code: string;
   invoice_no: string;
+  is_backorder: boolean;
   created_at: string;
   // Joined
   branch?: Branch;
