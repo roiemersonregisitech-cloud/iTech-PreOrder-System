@@ -152,6 +152,16 @@ export default function CreateBackorderPage() {
       return;
     }
 
+    const inv = inventory.find(
+      i => i.branch_id === targetBranch && (i.product as Product)?.id === selectedProduct
+    );
+    const avail = inv ? inv.qty_on_hand - inv.qty_reserved : 0;
+    
+    if (avail > 0) {
+      setReserveError('This item is currently in stock at this branch. Please use the Reservations page.');
+      return;
+    }
+
     if (!customerName.trim() || !customerContact.trim()) {
       setReserveError('Customer name and contact information are required');
       return;
@@ -236,6 +246,12 @@ export default function CreateBackorderPage() {
   const searchTerms = productSearch.toLowerCase().split(/\s+/).filter(Boolean);
   const filteredProducts = products.filter((p: Product) => {
     if (!p.is_active || !p.backorder_allowed) return false;
+    
+    // Only show items with 0 stocks for the selected branch
+    const inv = inventory.find(i => i.branch_id === selectedBranch && (i.product as Product)?.id === p.id);
+    const avail = inv ? inv.qty_on_hand - inv.qty_reserved : 0;
+    if (avail > 0) return false;
+
     if (searchTerms.length === 0) return true;
     const searchTarget = `${p.name} ${p.sku}`.toLowerCase();
     return searchTerms.every(term => searchTarget.includes(term));

@@ -240,6 +240,12 @@ export default function ReservationsPage() {
   const searchTerms = productSearch.toLowerCase().split(/\s+/).filter(Boolean);
   const filteredProducts = products.filter((p: Product) => {
     if (!p.is_active) return false;
+
+    // Only show items with stocks for the selected branch
+    const inv = inventory.find(i => i.branch_id === selectedBranch && (i.product as Product)?.id === p.id);
+    const avail = inv ? inv.qty_on_hand - inv.qty_reserved : 0;
+    if (avail <= 0) return false;
+
     if (searchTerms.length === 0) return true;
     const searchTarget = `${p.name} ${p.sku}`.toLowerCase();
     return searchTerms.every(term => searchTarget.includes(term));
