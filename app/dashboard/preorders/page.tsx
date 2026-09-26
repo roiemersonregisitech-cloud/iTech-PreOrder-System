@@ -212,7 +212,18 @@ export default function PreordersPage() {
                     <div style={{ fontFamily: 'monospace', fontWeight: 800, fontSize: '1.1rem', color: 'var(--accent-primary)', letterSpacing: '0.05em' }}>
                       {p.preorder_code}
                     </div>
-                    <span className={`badge ${badgeClass}`}>{p.status}</span>
+                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                      {p.is_backorder && (
+                        <div style={{
+                          padding: '0.2rem 0.4rem', borderRadius: 'var(--radius-sm)',
+                          background: 'rgba(245, 158, 11, 0.12)', border: '1px solid rgba(245, 158, 11, 0.25)',
+                          fontSize: '0.65rem', fontWeight: 700, color: 'var(--accent-warning)',
+                        }}>
+                          ⚠️ BACKORDER
+                        </div>
+                      )}
+                      <span className={`badge ${badgeClass}`}>{p.status}</span>
+                    </div>
                   </div>
                   {/* Branch Allocation Indicator */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.75rem', fontSize: '0.75rem', color: 'var(--accent-primary)', fontWeight: 600 }}>

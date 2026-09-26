@@ -14,6 +14,7 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [globalTimeout, setGlobalTimeout] = useState(30);
   const [invoiceLength, setInvoiceLength] = useState(6);
+  const [backorderEnabled, setBackorderEnabled] = useState(false);
   const [overrides, setOverrides] = useState<BranchOverride[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [saved, setSaved] = useState(false);
@@ -23,18 +24,23 @@ export default function SettingsPage() {
   const [addTimeout, setAddTimeout] = useState('');
 
   const fetchSettings = useCallback(async () => {
-    const [timeoutRes, invoiceRes] = await Promise.all([
+    const [timeoutRes, invoiceRes, backorderRes] = await Promise.all([
       fetch('/api/settings/reservation-timeout'),
-      fetch('/api/settings/invoice-format')
+      fetch('/api/settings/invoice-format'),
+      fetch('/api/settings/backorder')
     ]);
     const timeoutData = await timeoutRes.json();
     const invoiceData = await invoiceRes.json();
+    const backorderData = await backorderRes.json();
     if (timeoutRes.ok) {
       setGlobalTimeout(timeoutData.global_timeout_minutes);
       setOverrides(timeoutData.branch_overrides || []);
     }
     if (invoiceRes.ok) {
       setInvoiceLength(invoiceData.invoice_length || 6);
+    }
+    if (backorderRes.ok) {
+      setBackorderEnabled(backorderData.backorder_enabled || false);
     }
   }, []);
 
@@ -57,7 +63,7 @@ export default function SettingsPage() {
   }, []);
 
   async function handleSave() {
-    const [timeoutRes, invoiceRes] = await Promise.all([
+    const [timeoutRes, invoiceRes, backorderRes] = await Promise.all([
       fetch('/api/settings/reservation-timeout', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -67,9 +73,14 @@ export default function SettingsPage() {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ invoice_length: invoiceLength }),
+      }),
+      fetch('/api/settings/backorder', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ backorder_enabled: backorderEnabled }),
       })
     ]);
-    if (timeoutRes.ok && invoiceRes.ok) {
+    if (timeoutRes.ok && invoiceRes.ok && backorderRes.ok) {
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     }
@@ -203,6 +214,61 @@ export default function SettingsPage() {
             onClick={handleSave}
           />
         </div>
+      </div>
+
+      {/* Backorder Settings */}
+      <div className="glass-card" style={{ padding: '1.5rem', marginBottom: '1.5rem' }}>
+        <h2 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-heading)', marginBottom: '0.25rem' }}>
+          Backorder Settings
+        </h2>
+        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
+          When enabled, products individually marked as &quot;backorder allowed&quot; can be reserved even when stock is 0. Cashiers will be warned that the item is a backorder.
+        </p>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+          <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
+            Allow Backorders:
+          </label>
+          <button
+            id="backorder-toggle"
+            type="button"
+            onClick={() => setBackorderEnabled(!backorderEnabled)}
+            style={{
+              position: 'relative', width: '48px', height: '26px', borderRadius: '9999px',
+              border: 'none', cursor: 'pointer', transition: 'background 0.3s',
+              background: backorderEnabled ? 'var(--accent-success)' : 'var(--bg-tertiary)',
+            }}
+          >
+            <span style={{
+              position: 'absolute', top: '3px', width: '20px', height: '20px', borderRadius: '50%',
+              background: 'white', transition: 'left 0.3s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+              left: backorderEnabled ? '25px' : '3px',
+            }} />
+          </button>
+          <span style={{
+            fontSize: '0.8rem', fontWeight: 700,
+            color: backorderEnabled ? 'var(--accent-success)' : 'var(--text-muted)',
+          }}>
+            {backorderEnabled ? 'ENABLED' : 'DISABLED'}
+          </span>
+          <ActionButton
+            id="save-backorder"
+            label={saved ? '✓ Saved' : 'Save All Settings'}
+            loadingLabel="Saving…"
+            variant="primary"
+            onClick={handleSave}
+          />
+        </div>
+
+        {backorderEnabled && (
+          <div style={{
+            padding: '0.75rem', borderRadius: 'var(--radius-md)',
+            background: 'rgba(245, 158, 11, 0.08)', border: '1px solid rgba(245, 158, 11, 0.2)',
+            fontSize: '0.8rem', color: 'var(--accent-warning)',
+          }}>
+            ⚠️ Backorders are enabled. Go to the <strong>Products</strong> page to mark individual products as backorder-eligible.
+          </div>
+        )}
       </div>
 
       {/* Branch Overrides */}

@@ -91,7 +91,18 @@ export async function POST(request: NextRequest) {
       request,
     });
 
-    return NextResponse.json({ reservation_id: data, status: 'pending' }, { status: 201 });
+    // Check if the reservation was created as a backorder
+    const { data: createdRes } = await supabase
+      .from('reservations')
+      .select('is_backorder')
+      .eq('id', data)
+      .single();
+
+    return NextResponse.json({
+      reservation_id: data,
+      status: 'pending',
+      is_backorder: createdRes?.is_backorder || false,
+    }, { status: 201 });
   } catch (err) {
     console.error('POST /api/reservations error:', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

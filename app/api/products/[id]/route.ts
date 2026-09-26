@@ -51,7 +51,7 @@ export async function PUT(
 
     const { id } = await params;
     const body = await request.json();
-    const { sku, name, description, unit_price, is_active, image_url } = body;
+    const { sku, name, description, unit_price, is_active, image_url, backorder_allowed } = body;
 
     const updateData: Record<string, unknown> = {};
     if (sku !== undefined) updateData.sku = sku.trim().toUpperCase();
@@ -60,6 +60,7 @@ export async function PUT(
     if (unit_price !== undefined) updateData.unit_price = unit_price !== null ? parseFloat(unit_price) : null;
     if (is_active !== undefined) updateData.is_active = Boolean(is_active);
     if (image_url !== undefined) updateData.image_url = image_url || null;
+    if (backorder_allowed !== undefined) updateData.backorder_allowed = Boolean(backorder_allowed);
 
     if (Object.keys(updateData).length === 0) {
       return NextResponse.json({ error: 'No fields provided for update' }, { status: 400 });

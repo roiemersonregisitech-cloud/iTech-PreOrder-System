@@ -9,6 +9,7 @@ export default function ProductsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [currentStaff, setCurrentStaff] = useState<Staff | null>(null);
+  const [backorderGlobalEnabled, setBackorderGlobalEnabled] = useState(false);
 
   // Pagination State
   const [page, setPage] = useState(1);
@@ -61,7 +62,14 @@ export default function ProductsPage() {
     initialized.current = true;
 
     (async () => {
-      await Promise.all([fetchStaff(), fetchProducts()]);
+      const [, , backorderRes] = await Promise.all([
+        fetchStaff(), fetchProducts(),
+        fetch('/api/settings/backorder')
+      ]);
+      if (backorderRes.ok) {
+        const data = await backorderRes.json();
+        setBackorderGlobalEnabled(data.backorder_enabled || false);
+      }
       setLoading(false);
     })();
   }, [fetchStaff, fetchProducts]);
@@ -286,7 +294,7 @@ export default function ProductsPage() {
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
           <thead>
             <tr style={{ borderBottom: '1px solid var(--border-primary)' }}>
-              {['Image', 'SKU', 'Product Name', 'Description', 'Unit Price', 'Status', isSuperAdmin ? 'Actions' : ''].filter(Boolean).map(h => (
+              {['Image', 'SKU', 'Product Name', 'Description', 'Unit Price', 'Status', ...(isSuperAdmin && backorderGlobalEnabled ? ['Backorder'] : []), isSuperAdmin ? 'Actions' : ''].filter(Boolean).map(h => (
                 <th key={h} style={{ padding: '0.75rem 1rem', textAlign: 'left', color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{h}</th>
               ))}
             </tr>
@@ -331,6 +339,32 @@ export default function ProductsPage() {
                       {p.is_active ? 'Active' : 'Inactive'}
                     </span>
                   </td>
+                  {isSuperAdmin && backorderGlobalEnabled && (
+                    <td style={{ padding: '0.75rem 1rem' }}>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          const res = await fetch(`/api/products/${p.id}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ backorder_allowed: !p.backorder_allowed }),
+                          });
+                          if (res.ok) fetchProducts();
+                        }}
+                        style={{
+                          position: 'relative', width: '40px', height: '22px', borderRadius: '9999px',
+                          border: 'none', cursor: 'pointer', transition: 'background 0.3s',
+                          background: p.backorder_allowed ? 'var(--accent-warning)' : 'var(--bg-tertiary)',
+                        }}
+                      >
+                        <span style={{
+                          position: 'absolute', top: '2px', width: '18px', height: '18px', borderRadius: '50%',
+                          background: 'white', transition: 'left 0.3s', boxShadow: '0 1px 2px rgba(0,0,0,0.2)',
+                          left: p.backorder_allowed ? '20px' : '2px',
+                        }} />
+                      </button>
+                    </td>
+                  )}
                   {isSuperAdmin && (
                     <td style={{ padding: '0.75rem 1rem' }}>
                       <div style={{ display: 'flex', gap: '0.4rem' }}>

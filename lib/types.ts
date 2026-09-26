@@ -23,6 +23,7 @@ export interface Product {
   unit_price: number | null;
   image_url: string | null;
   central_qty: number;
+  backorder_allowed: boolean;
   is_active: boolean;
   created_at: string;
 }
@@ -62,6 +63,7 @@ export interface Reservation {
   customer_contact: string | null;
   customer_address: string | null;
   status: ReservationStatus;
+  is_backorder: boolean;
   created_at: string;
   expires_at: string;
   cancelled_at: string | null;
@@ -86,6 +88,7 @@ export interface Preorder {
   preorder_code: string;
   invoice_no: string;
   remarks: string;
+  is_backorder: boolean;
   status: PreorderStatus;
   created_by: string;
   created_at: string;

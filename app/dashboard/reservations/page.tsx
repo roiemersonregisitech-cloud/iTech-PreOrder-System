@@ -21,6 +21,7 @@ export default function ReservationsPage() {
   const [statusFilter, setStatusFilter] = useState<string>('pending');
   const [search, setSearch] = useState('');
   const [invoiceLength, setInvoiceLength] = useState(6);
+  const [backorderEnabled, setBackorderEnabled] = useState(false);
   
   // Pagination state
   const [page, setPage] = useState(1);
@@ -106,13 +107,18 @@ export default function ReservationsPage() {
     initialized.current = true;
 
     (async () => {
-      const [invoiceRes] = await Promise.all([
+      const [invoiceRes, backorderRes] = await Promise.all([
         fetch('/api/settings/invoice-format'),
+        fetch('/api/settings/backorder'),
         fetchStaff(), fetchReservations(), fetchInventory(), fetchProducts(), fetchBranches()
       ]);
       if (invoiceRes.ok) {
         const data = await invoiceRes.json();
         setInvoiceLength(data.invoice_length || 6);
+      }
+      if (backorderRes.ok) {
+        const data = await backorderRes.json();
+        setBackorderEnabled(data.backorder_enabled || false);
       }
       setLoading(false);
     })();
@@ -340,6 +346,18 @@ export default function ReservationsPage() {
                 <span className={`badge badge-${r.status}`}>{r.status}</span>
               </div>
 
+              {/* Backorder Badge */}
+              {r.is_backorder && (
+                <div style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '0.3rem', marginBottom: '0.5rem',
+                  padding: '0.25rem 0.5rem', borderRadius: 'var(--radius-sm)',
+                  background: 'rgba(245, 158, 11, 0.12)', border: '1px solid rgba(245, 158, 11, 0.25)',
+                  fontSize: '0.7rem', fontWeight: 700, color: 'var(--accent-warning)',
+                }}>
+                  ⚠️ BACKORDER
+                </div>
+              )}
+
               {/* Branch Allocation Badge */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.75rem', fontSize: '0.75rem', color: 'var(--accent-primary)', fontWeight: 600 }}>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
@@ -540,9 +558,16 @@ export default function ReservationsPage() {
                          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '3rem', opacity: 0.5 }}>📦</div>
                        )}
                        {avail <= 0 && (
-                         <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: '1.2rem' }}>
-                           OUT OF STOCK
-                         </div>
+                         backorderEnabled && p.backorder_allowed ? (
+                          <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(245, 158, 11, 0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: '1rem', flexDirection: 'column', gap: '0.2rem' }}>
+                            <span>⚠️ BACKORDER</span>
+                            <span style={{ fontSize: '0.65rem', fontWeight: 500, opacity: 0.9 }}>Available for pre-order</span>
+                          </div>
+                         ) : (
+                          <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: '1.2rem' }}>
+                            OUT OF STOCK
+                          </div>
+                         )
                        )}
                     </div>
                     {/* Product Info */}
@@ -667,6 +692,25 @@ export default function ReservationsPage() {
               {reserveError}
             </div>
           )}
+
+          {/* Backorder Warning */}
+          {selectedProduct && (() => {
+            const inv = inventory.find(i => i.branch_id === selectedBranch && (i.product as Product)?.id === selectedProduct);
+            const avail = inv ? inv.qty_on_hand - inv.qty_reserved : 0;
+            const prod = products.find(p => p.id === selectedProduct);
+            if (avail <= 0 && backorderEnabled && prod?.backorder_allowed) {
+              return (
+                <div style={{
+                  padding: '0.75rem', marginBottom: '1rem', borderRadius: 'var(--radius-md)',
+                  background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.3)',
+                  fontSize: '0.8rem', color: 'var(--accent-warning)',
+                }}>
+                  ⚠️ <strong>This item has no stock at this branch.</strong> This reservation will be created as a <strong>backorder</strong>. The customer will need to wait for stock to arrive before delivery.
+                </div>
+              );
+            }
+            return null;
+          })()}
 
           <ActionButton
             id="submit-reservation"
