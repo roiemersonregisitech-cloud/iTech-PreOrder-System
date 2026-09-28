@@ -362,24 +362,31 @@ body {
     width: 100% !important;
   }
 
-  /* Collapse everything in the document to prevent extra blank pages */
-  body *:not(#print-receipt-container):not(#print-receipt-container *) {
-    visibility: hidden !important;
-    position: absolute !important;
-    left: -9999px !important;
-    top: -9999px !important;
-    width: 0 !important;
-    height: 0 !important;
+  /* Hide layout elements */
+  .sidebar, .mobile-header, .glass-card, [role="dialog"], .modal-backdrop {
+    display: none !important;
+  }
+
+  /* Remove main layout padding */
+  .dashboard-main {
     margin: 0 !important;
     padding: 0 !important;
-    overflow: hidden !important;
+  }
+
+  /* Hide all siblings of the print container inside the page wrapper */
+  .animate-fade-in > *:not(#print-receipt-container) {
+    display: none !important;
+  }
+
+  /* Ensure animations don't interfere with fixed positioning */
+  .animate-fade-in {
+    animation: none !important;
+    transform: none !important;
   }
 
   #print-receipt-container {
     visibility: visible !important;
-    position: absolute !important;
-    left: 0 !important;
-    top: 0 !important;
+    position: static !important;
     width: 100% !important;
     display: block !important;
     background: white !important;
