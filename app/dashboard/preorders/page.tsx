@@ -35,6 +35,9 @@ export default function PreordersPage() {
   const [revertModal, setRevertModal] = useState<{ preorder: Preorder } | null>(null);
   const [revertError, setRevertError] = useState('');
 
+  // Print Preorder
+  const [printPreorder, setPrintPreorder] = useState<Preorder | null>(null);
+
   const fetchStaff = useCallback(async () => {
     const res = await fetch('/api/staff/me');
     if (res.ok) {
@@ -245,6 +248,32 @@ export default function PreordersPage() {
                       <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>Remarks: </span>{p.remarks}
                     </div>
                   )}
+
+                  {/* Print Code Button */}
+                  <div style={{ marginTop: '0.75rem' }}>
+                    <button
+                      onClick={() => {
+                        setPrintPreorder(p);
+                        setTimeout(() => window.print(), 100);
+                      }}
+                      style={{
+                        padding: '0.4rem 0.8rem',
+                        borderRadius: 'var(--radius-sm)',
+                        background: 'var(--bg-tertiary)',
+                        border: '1px solid var(--border-primary)',
+                        color: 'var(--text-primary)',
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.4rem'
+                      }}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6,9 6,2 18,2 18,9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                      Print Code
+                    </button>
+                  </div>
 
                   {/* Deliver Button — only for active preorders */}
                   {p.status === 'active' && (
@@ -496,7 +525,10 @@ export default function PreordersPage() {
             </button>
             <button
               id="print-sales-order"
-              onClick={() => window.print()}
+              onClick={() => {
+                setPrintPreorder(null);
+                setTimeout(() => window.print(), 100);
+              }}
               style={{
                 padding: '0.5rem 1rem', borderRadius: 'var(--radius-md)',
                 background: 'var(--bg-tertiary)', border: '1px solid var(--border-primary)',
@@ -510,6 +542,58 @@ export default function PreordersPage() {
           </div>
         </div>
       </Modal>
+
+      {/* Hidden Print Container for both Preorder Code and Sales Order */}
+      {(printPreorder || salesOrderResult) && (
+        <div id="print-receipt-container">
+          <div style={{ textAlign: 'center' }}>
+            <h2 style={{ fontSize: '1.4rem', fontWeight: 800, margin: '0 0 5px 0' }}>iTech PreOrder</h2>
+            
+            {printPreorder ? (
+              <>
+                <div style={{ fontSize: '0.9rem', marginBottom: '15px', color: '#555' }}>
+                  {printPreorder.branch?.name} ({printPreorder.branch?.code})
+                </div>
+                
+                <div style={{ margin: '15px 0', padding: '10px 0', borderTop: '1px dashed black', borderBottom: '1px dashed black' }}>
+                  <div style={{ fontSize: '0.8rem', color: '#555', marginBottom: '5px' }}>PREORDER CODE</div>
+                  <div style={{ fontSize: '1.6rem', fontWeight: 'bold', letterSpacing: '0.05em' }}>
+                    {printPreorder.preorder_code}
+                  </div>
+                </div>
+                
+                <div style={{ textAlign: 'left', margin: '10px 0', fontSize: '0.85rem', lineHeight: '1.4' }}>
+                  <div><strong>Product:</strong> {((printPreorder.reservation as Reservation)?.product as Product)?.name}</div>
+                  <div><strong>SKU:</strong> {((printPreorder.reservation as Reservation)?.product as Product)?.sku}</div>
+                  <div style={{ marginTop: '5px' }}><strong>Customer:</strong> {(printPreorder.reservation as Reservation)?.customer_name || 'N/A'}</div>
+                  <div><strong>Qty:</strong> {(printPreorder.reservation as Reservation)?.qty}</div>
+                  <div><strong>Date:</strong> {new Date(printPreorder.created_at).toLocaleDateString()}</div>
+                </div>
+                
+                <div style={{ marginTop: '20px', fontSize: '0.75rem', color: '#555' }}>
+                  Please present this code to claim your item.
+                </div>
+              </>
+            ) : salesOrderResult ? (
+              <>
+                <div style={{ margin: '15px 0', padding: '10px 0', borderTop: '1px dashed black', borderBottom: '1px dashed black' }}>
+                  <div style={{ fontSize: '0.8rem', color: '#555', marginBottom: '5px' }}>SALES ORDER</div>
+                  <div style={{ fontSize: '1.6rem', fontWeight: 'bold', letterSpacing: '0.05em' }}>
+                    {salesOrderResult.sales_order_number}
+                  </div>
+                </div>
+                <div style={{ textAlign: 'left', margin: '10px 0', fontSize: '0.85rem', lineHeight: '1.4' }}>
+                  <div><strong>Preorder Code:</strong> {salesOrderResult.preorder_code}</div>
+                  <div><strong>Date Delivered:</strong> {new Date().toLocaleDateString()}</div>
+                </div>
+                <div style={{ marginTop: '20px', fontSize: '0.75rem', color: '#555' }}>
+                  Item delivered. Thank you!
+                </div>
+              </>
+            ) : null}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

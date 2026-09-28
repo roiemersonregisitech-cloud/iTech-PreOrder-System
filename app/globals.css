@@ -327,7 +327,7 @@ body {
   }
 }
 
-/* ─── Small phone breakpoint (≤480px) ─── */
+/* Small phone breakpoint (≤480px) */
 @media (max-width: 480px) {
   .stats-grid {
     grid-template-columns: 1fr !important;
@@ -337,3 +337,37 @@ body {
     grid-template-columns: 1fr !important;
   }
 }
+
+/* ───────────────────────────────────────────────
+   PRINT UTILITIES
+   ─────────────────────────────────────────────── */
+
+@media screen {
+  #print-receipt-container {
+    display: none;
+  }
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #print-receipt-container, #print-receipt-container * {
+    visibility: visible;
+    color: black !important;
+    background: white !important;
+  }
+  #print-receipt-container {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 80mm;
+    display: block !important;
+    padding: 5mm;
+  }
+  @page {
+    size: 80mm auto;
+    margin: 0;
+  }
+}
+
