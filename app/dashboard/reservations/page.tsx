@@ -50,6 +50,7 @@ export default function ReservationsPage() {
 
   // Preorder code display
   const [preorderCode, setPreorderCode] = useState<string | null>(null);
+  const [confirmedReservation, setConfirmedReservation] = useState<Reservation | null>(null);
 
   const fetchStaff = useCallback(async () => {
     const res = await fetch('/api/staff/me');
@@ -228,6 +229,7 @@ export default function ReservationsPage() {
     const data = await res.json();
     if (res.ok) {
       setPreorderCode(data.preorder_code);
+      setConfirmedReservation(confirmModal.reservation);
       setConfirmModal(null);
       setInvoiceNo('');
       setRemarks('');
@@ -868,6 +870,38 @@ export default function ReservationsPage() {
           </div>
         </div>
       </Modal>
+
+      {/* Hidden Print Container for Preorder Code */}
+      {(preorderCode && confirmedReservation) && (
+        <div id="print-receipt-container">
+          <div style={{ textAlign: 'center' }}>
+            <h2 style={{ fontSize: '1.4rem', fontWeight: 800, margin: '0 0 5px 0' }}>iTech PreOrder</h2>
+            
+            <div style={{ fontSize: '0.9rem', marginBottom: '15px', color: '#555' }}>
+              {confirmedReservation.branch?.name} ({confirmedReservation.branch?.code})
+            </div>
+            
+            <div style={{ margin: '15px 0', padding: '10px 0', borderTop: '1px dashed black', borderBottom: '1px dashed black' }}>
+              <div style={{ fontSize: '0.8rem', color: '#555', marginBottom: '5px' }}>PREORDER CODE</div>
+              <div style={{ fontSize: '1.6rem', fontWeight: 'bold', letterSpacing: '0.05em' }}>
+                {preorderCode}
+              </div>
+            </div>
+            
+            <div style={{ textAlign: 'left', margin: '10px 0', fontSize: '0.85rem', lineHeight: '1.4' }}>
+              <div><strong>Product:</strong> {(confirmedReservation.product as Product)?.name}</div>
+              <div><strong>SKU:</strong> {(confirmedReservation.product as Product)?.sku}</div>
+              <div style={{ marginTop: '5px' }}><strong>Customer:</strong> {confirmedReservation.customer_name || 'N/A'}</div>
+              <div><strong>Qty:</strong> {confirmedReservation.qty}</div>
+              <div><strong>Date:</strong> {new Date().toLocaleDateString()}</div>
+            </div>
+            
+            <div style={{ marginTop: '20px', fontSize: '0.75rem', color: '#555' }}>
+              Please present this code to claim your item.
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
