@@ -22,6 +22,7 @@ export default function StaffPage() {
   const [newName, setNewName] = useState('');
   const [newRole, setNewRole] = useState('cashier');
   const [newBranch, setNewBranch] = useState('');
+  const [branchSearchText, setBranchSearchText] = useState('');
   const [createError, setCreateError] = useState('');
 
   const fetchStaff = useCallback(async () => {
@@ -77,6 +78,7 @@ export default function StaffPage() {
     if (currentStaff?.role !== 'branch_admin') {
       setNewRole('cashier');
       setNewBranch('');
+      setBranchSearchText('');
     }
     fetchStaff();
   }
@@ -210,10 +212,24 @@ export default function StaffPage() {
                   {branches.find(b => b.id === currentStaff.branch_id)?.name || 'Your Branch'}
                 </div>
               ) : (
-                <select id="staff-branch" value={newBranch} onChange={e => setNewBranch(e.target.value)} style={inputStyle}>
-                  <option value="">Select branch</option>
-                  {branches.map(b => <option key={b.id} value={b.id}>{b.name} ({b.code})</option>)}
-                </select>
+                <>
+                  <input
+                    list="staff-branches-list"
+                    id="staff-branch"
+                    value={branchSearchText}
+                    onChange={e => {
+                      setBranchSearchText(e.target.value);
+                      const match = branches.find(b => `${b.name} (${b.code})` === e.target.value);
+                      if (match) setNewBranch(match.id);
+                      else setNewBranch('');
+                    }}
+                    placeholder="Type to search branch..."
+                    style={inputStyle}
+                  />
+                  <datalist id="staff-branches-list">
+                    {branches.map(b => <option key={b.id} value={`${b.name} (${b.code})`} />)}
+                  </datalist>
+                </>
               )}
             </div>
           </div>

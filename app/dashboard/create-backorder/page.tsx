@@ -50,6 +50,9 @@ export default function CreateBackorderPage() {
 
   // Preorder code display
   const [preorderCode, setPreorderCode] = useState<string | null>(null);
+  const [confirmedReservation, setConfirmedReservation] = useState<Reservation | null>(null);
+  
+  const [branchSearchText, setBranchSearchText] = useState("");
 
   const fetchStaff = useCallback(async () => {
     const res = await fetch('/api/staff/me');
@@ -96,7 +99,15 @@ export default function CreateBackorderPage() {
     if (res.ok && data.data) {
       setBranches(data.data);
       // Only set first branch if user has no assigned branch
-      setSelectedBranch(prev => prev || (data.data.length > 0 ? data.data[0].id : ''));
+      const defaultBranch = data.data.length > 0 ? data.data[0].id : '';
+      setSelectedBranch(prev => {
+        if (!prev) {
+          const b = data.data.find((branch: Branch) => branch.id === defaultBranch);
+          if (b) setBranchSearchText(`${b.name} (${b.code})`);
+          return defaultBranch;
+        }
+        return prev;
+      });
     }
   }, []);
 
@@ -234,6 +245,7 @@ export default function CreateBackorderPage() {
     const data = await res.json();
     if (res.ok) {
       setPreorderCode(data.preorder_code);
+      setConfirmedReservation(confirmModal.reservation);
       setConfirmModal(null);
       setInvoiceNo('');
       setRemarks('');
@@ -487,25 +499,51 @@ export default function CreateBackorderPage() {
             <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
               Reserving Branch
             </label>
-            <select
-              id="reserve-branch-select"
-              value={selectedBranch}
-              onChange={e => setSelectedBranch(e.target.value)}
-              disabled={currentStaff?.role !== 'super_admin' && !!currentStaff?.branch_id}
-              style={{
-                width: '100%', padding: '0.6rem 0.8rem',
-                background: 'var(--bg-input)', border: '1px solid var(--border-primary)',
-                borderRadius: 'var(--radius-md)', color: 'var(--text-primary)',
-                fontSize: '0.85rem', outline: 'none',
-                opacity: (currentStaff?.role !== 'super_admin' && !!currentStaff?.branch_id) ? 0.75 : 1,
-              }}
-            >
-              {branches.map(b => (
-                <option key={b.id} value={b.id}>
-                  {b.name} ({b.code})
-                </option>
-              ))}
-            </select>
+            {currentStaff?.role === 'super_admin' ? (
+              <>
+                <input
+                  list="branches-list"
+                  id="reserve-branch-select"
+                  value={branchSearchText}
+                  onChange={e => {
+                    setBranchSearchText(e.target.value);
+                    const match = branches.find(b => `${b.name} (${b.code})` === e.target.value);
+                    if (match) setSelectedBranch(match.id);
+                    else setSelectedBranch('');
+                  }}
+                  placeholder="Type to search branch..."
+                  style={{
+                    width: '100%', padding: '0.6rem 0.8rem',
+                    background: 'var(--bg-input)', border: '1px solid var(--border-primary)',
+                    borderRadius: 'var(--radius-md)', color: 'var(--text-primary)',
+                    fontSize: '0.85rem', outline: 'none',
+                  }}
+                />
+                <datalist id="branches-list">
+                  {branches.map(b => <option key={b.id} value={`${b.name} (${b.code})`} />)}
+                </datalist>
+              </>
+            ) : (
+              <select
+                id="reserve-branch-select"
+                value={selectedBranch}
+                onChange={e => setSelectedBranch(e.target.value)}
+                disabled={!!currentStaff?.branch_id}
+                style={{
+                  width: '100%', padding: '0.6rem 0.8rem',
+                  background: 'var(--bg-input)', border: '1px solid var(--border-primary)',
+                  borderRadius: 'var(--radius-md)', color: 'var(--text-primary)',
+                  fontSize: '0.85rem', outline: 'none',
+                  opacity: !!currentStaff?.branch_id ? 0.75 : 1,
+                }}
+              >
+                {branches.map(b => (
+                  <option key={b.id} value={b.id}>
+                    {b.name} ({b.code})
+                  </option>
+                ))}
+              </select>
+            )}
             {currentStaff?.role !== 'super_admin' && currentStaff?.branch_id && (
               <div style={{ fontSize: '0.72rem', color: 'var(--accent-primary)', marginTop: '0.3rem', fontWeight: 600 }}>
                 ✓ Auto-selected for your assigned branch
@@ -873,6 +911,45 @@ export default function CreateBackorderPage() {
           </div>
         </div>
       </Modal>
+
+      {/* Hidden Print Container for Preorder Code */}
+      {(preorderCode && confirmedReservation) && (
+        <div id="print-receipt-container">
+          {['STORE COPY', 'CUSTOMER COPY'].map((copyType, index) => {
+            const branch = branches.find(b => b.id === confirmedReservation.branch_id);
+            const product = confirmedReservation.product as Product;
+            
+            return (
+              <div key={index} className="receipt-copy" style={{ textAlign: 'center', fontFamily: 'sans-serif' }}>
+                <div style={{ fontSize: '0.55rem', fontWeight: 800, marginBottom: '0.2rem', borderBottom: '1px solid black', paddingBottom: '0.1rem' }}>*** {copyType} ***</div>
+                <h2 style={{ fontSize: '0.9rem', fontWeight: 900, margin: '0 0 2px 0' }}>iTech PreOrder</h2>
+                
+                <div style={{ fontSize: '0.55rem', marginBottom: '4px', color: '#111', lineHeight: '1' }}>
+                  {branch?.name} ({branch?.code})
+                </div>
+                
+                <div style={{ margin: '4px 0', padding: '2px 0', borderTop: '1px dashed black', borderBottom: '1px dashed black' }}>
+                  <div style={{ fontSize: '0.5rem', color: '#333', marginBottom: '1px' }}>PREORDER CODE</div>
+                  <div style={{ fontSize: '1rem', fontWeight: 'bold', letterSpacing: '0.02em', wordBreak: 'break-all', lineHeight: '1.1' }}>
+                    {preorderCode}
+                  </div>
+                </div>
+                
+                <div style={{ textAlign: 'left', margin: '4px 0', fontSize: '0.55rem', lineHeight: '1.1' }}>
+                  <div style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}><strong>Prod:</strong> {product?.name}</div>
+                  <div><strong>SKU:</strong> {product?.sku}</div>
+                  <div><strong>Cust:</strong> {confirmedReservation.customer_name || 'N/A'}</div>
+                  <div><strong>Qty:</strong> {confirmedReservation.qty} &nbsp;|&nbsp; <strong>Date:</strong> {new Date().toLocaleDateString()}</div>
+                </div>
+                
+                <div style={{ marginTop: '6px', fontSize: '0.5rem', color: '#333', fontStyle: 'italic' }}>
+                  Please present this code to claim.
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

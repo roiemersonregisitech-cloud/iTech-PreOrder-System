@@ -51,6 +51,8 @@ export default function ReservationsPage() {
   // Preorder code display
   const [preorderCode, setPreorderCode] = useState<string | null>(null);
   const [confirmedReservation, setConfirmedReservation] = useState<Reservation | null>(null);
+  
+  const [branchSearchText, setBranchSearchText] = useState("");
 
   const fetchStaff = useCallback(async () => {
     const res = await fetch('/api/staff/me');
@@ -97,7 +99,15 @@ export default function ReservationsPage() {
     if (res.ok && data.data) {
       setBranches(data.data);
       // Only set first branch if user has no assigned branch
-      setSelectedBranch(prev => prev || (data.data.length > 0 ? data.data[0].id : ''));
+      const defaultBranch = data.data.length > 0 ? data.data[0].id : '';
+      setSelectedBranch(prev => {
+        if (!prev) {
+          const b = data.data.find((branch: Branch) => branch.id === defaultBranch);
+          if (b) setBranchSearchText(`${b.name} (${b.code})`);
+          return defaultBranch;
+        }
+        return prev;
+      });
     }
   }, []);
 
@@ -483,25 +493,51 @@ export default function ReservationsPage() {
             <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.4rem' }}>
               Reserving Branch
             </label>
-            <select
-              id="reserve-branch-select"
-              value={selectedBranch}
-              onChange={e => setSelectedBranch(e.target.value)}
-              disabled={currentStaff?.role !== 'super_admin' && !!currentStaff?.branch_id}
-              style={{
-                width: '100%', padding: '0.6rem 0.8rem',
-                background: 'var(--bg-input)', border: '1px solid var(--border-primary)',
-                borderRadius: 'var(--radius-md)', color: 'var(--text-primary)',
-                fontSize: '0.85rem', outline: 'none',
-                opacity: (currentStaff?.role !== 'super_admin' && !!currentStaff?.branch_id) ? 0.75 : 1,
-              }}
-            >
-              {branches.map(b => (
-                <option key={b.id} value={b.id}>
-                  {b.name} ({b.code})
-                </option>
-              ))}
-            </select>
+            {currentStaff?.role === 'super_admin' ? (
+              <>
+                <input
+                  list="branches-list"
+                  id="reserve-branch-select"
+                  value={branchSearchText}
+                  onChange={e => {
+                    setBranchSearchText(e.target.value);
+                    const match = branches.find(b => `${b.name} (${b.code})` === e.target.value);
+                    if (match) setSelectedBranch(match.id);
+                    else setSelectedBranch('');
+                  }}
+                  placeholder="Type to search branch..."
+                  style={{
+                    width: '100%', padding: '0.6rem 0.8rem',
+                    background: 'var(--bg-input)', border: '1px solid var(--border-primary)',
+                    borderRadius: 'var(--radius-md)', color: 'var(--text-primary)',
+                    fontSize: '0.85rem', outline: 'none',
+                  }}
+                />
+                <datalist id="branches-list">
+                  {branches.map(b => <option key={b.id} value={`${b.name} (${b.code})`} />)}
+                </datalist>
+              </>
+            ) : (
+              <select
+                id="reserve-branch-select"
+                value={selectedBranch}
+                onChange={e => setSelectedBranch(e.target.value)}
+                disabled={!!currentStaff?.branch_id}
+                style={{
+                  width: '100%', padding: '0.6rem 0.8rem',
+                  background: 'var(--bg-input)', border: '1px solid var(--border-primary)',
+                  borderRadius: 'var(--radius-md)', color: 'var(--text-primary)',
+                  fontSize: '0.85rem', outline: 'none',
+                  opacity: !!currentStaff?.branch_id ? 0.75 : 1,
+                }}
+              >
+                {branches.map(b => (
+                  <option key={b.id} value={b.id}>
+                    {b.name} ({b.code})
+                  </option>
+                ))}
+              </select>
+            )}
             {currentStaff?.role !== 'super_admin' && currentStaff?.branch_id && (
               <div style={{ fontSize: '0.72rem', color: 'var(--accent-primary)', marginTop: '0.3rem', fontWeight: 600 }}>
                 ✓ Auto-selected for your assigned branch
