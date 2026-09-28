@@ -875,31 +875,30 @@ export default function ReservationsPage() {
       {(preorderCode && confirmedReservation) && (
         <div id="print-receipt-container">
           {['STORE COPY', 'CUSTOMER COPY'].map((copyType, index) => (
-            <div key={index} className="receipt-copy" style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '0.65rem', fontWeight: 800, marginBottom: '0.5rem', borderBottom: '1px solid black', paddingBottom: '0.2rem' }}>*** {copyType} ***</div>
-              <h2 style={{ fontSize: '1.2rem', fontWeight: 800, margin: '0 0 5px 0' }}>iTech PreOrder</h2>
+            <div key={index} className="receipt-copy" style={{ textAlign: 'center', fontFamily: 'sans-serif' }}>
+              <div style={{ fontSize: '0.55rem', fontWeight: 800, marginBottom: '0.2rem', borderBottom: '1px solid black', paddingBottom: '0.1rem' }}>*** {copyType} ***</div>
+              <h2 style={{ fontSize: '0.9rem', fontWeight: 900, margin: '0 0 2px 0' }}>iTech PreOrder</h2>
               
-              <div style={{ fontSize: '0.8rem', marginBottom: '10px', color: '#333' }}>
+              <div style={{ fontSize: '0.55rem', marginBottom: '4px', color: '#111', lineHeight: '1' }}>
                 {confirmedReservation.branch?.name} ({confirmedReservation.branch?.code})
               </div>
               
-              <div style={{ margin: '10px 0', padding: '5px 0', borderTop: '1px dashed black', borderBottom: '1px dashed black' }}>
-                <div style={{ fontSize: '0.7rem', color: '#333', marginBottom: '2px' }}>PREORDER CODE</div>
-                <div style={{ fontSize: '1.4rem', fontWeight: 'bold', letterSpacing: '0.05em' }}>
+              <div style={{ margin: '4px 0', padding: '2px 0', borderTop: '1px dashed black', borderBottom: '1px dashed black' }}>
+                <div style={{ fontSize: '0.5rem', color: '#333', marginBottom: '1px' }}>PREORDER CODE</div>
+                <div style={{ fontSize: '1rem', fontWeight: 'bold', letterSpacing: '0.02em', wordBreak: 'break-all', lineHeight: '1.1' }}>
                   {preorderCode}
                 </div>
               </div>
               
-              <div style={{ textAlign: 'left', margin: '5px 0', fontSize: '0.75rem', lineHeight: '1.3' }}>
-                <div><strong>Product:</strong> {(confirmedReservation.product as Product)?.name}</div>
+              <div style={{ textAlign: 'left', margin: '4px 0', fontSize: '0.55rem', lineHeight: '1.1' }}>
+                <div style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}><strong>Prod:</strong> {(confirmedReservation.product as Product)?.name}</div>
                 <div><strong>SKU:</strong> {(confirmedReservation.product as Product)?.sku}</div>
-                <div style={{ marginTop: '2px' }}><strong>Customer:</strong> {confirmedReservation.customer_name || 'N/A'}</div>
-                <div><strong>Qty:</strong> {confirmedReservation.qty}</div>
-                <div><strong>Date:</strong> {new Date().toLocaleDateString()}</div>
+                <div><strong>Cust:</strong> {confirmedReservation.customer_name || 'N/A'}</div>
+                <div><strong>Qty:</strong> {confirmedReservation.qty} &nbsp;|&nbsp; <strong>Date:</strong> {new Date().toLocaleDateString()}</div>
               </div>
               
-              <div style={{ marginTop: '10px', fontSize: '0.65rem', color: '#333' }}>
-                Please present this code to claim your item.
+              <div style={{ marginTop: '6px', fontSize: '0.5rem', color: '#333', fontStyle: 'italic' }}>
+                Please present this code to claim.
               </div>
             </div>
           ))}
