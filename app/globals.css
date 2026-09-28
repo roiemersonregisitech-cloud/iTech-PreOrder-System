@@ -344,30 +344,67 @@ body {
 
 @media screen {
   #print-receipt-container {
-    display: none;
+    display: none !important;
   }
 }
 
 @media print {
-  body * {
-    visibility: hidden;
-  }
-  #print-receipt-container, #print-receipt-container * {
-    visibility: visible;
-    color: black !important;
-    background: white !important;
-  }
-  #print-receipt-container {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 80mm;
-    display: block !important;
-    padding: 5mm;
-  }
   @page {
-    size: 80mm auto;
+    size: 54mm 86mm; /* Credit card size */
     margin: 0;
+  }
+
+  html, body {
+    background: white !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    height: 100% !important;
+    width: 100% !important;
+  }
+
+  /* Collapse everything in the document to prevent extra blank pages */
+  body *:not(#print-receipt-container):not(#print-receipt-container *) {
+    visibility: hidden !important;
+    position: absolute !important;
+    left: -9999px !important;
+    top: -9999px !important;
+    width: 0 !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+  }
+
+  #print-receipt-container {
+    visibility: visible !important;
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    display: block !important;
+    background: white !important;
+    color: black !important;
+  }
+
+  #print-receipt-container * {
+    visibility: visible !important;
+  }
+
+  .receipt-copy {
+    width: 54mm;
+    height: 86mm;
+    padding: 3mm;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    page-break-after: always;
+    break-after: page;
+  }
+  
+  .receipt-copy:last-child {
+    page-break-after: auto;
+    break-after: auto;
   }
 }
 

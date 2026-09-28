@@ -546,52 +546,55 @@ export default function PreordersPage() {
       {/* Hidden Print Container for both Preorder Code and Sales Order */}
       {(printPreorder || salesOrderResult) && (
         <div id="print-receipt-container">
-          <div style={{ textAlign: 'center' }}>
-            <h2 style={{ fontSize: '1.4rem', fontWeight: 800, margin: '0 0 5px 0' }}>iTech PreOrder</h2>
-            
-            {printPreorder ? (
-              <>
-                <div style={{ fontSize: '0.9rem', marginBottom: '15px', color: '#555' }}>
-                  {printPreorder.branch?.name} ({printPreorder.branch?.code})
-                </div>
-                
-                <div style={{ margin: '15px 0', padding: '10px 0', borderTop: '1px dashed black', borderBottom: '1px dashed black' }}>
-                  <div style={{ fontSize: '0.8rem', color: '#555', marginBottom: '5px' }}>PREORDER CODE</div>
-                  <div style={{ fontSize: '1.6rem', fontWeight: 'bold', letterSpacing: '0.05em' }}>
-                    {printPreorder.preorder_code}
+          {['STORE COPY', 'CUSTOMER COPY'].map((copyType, index) => (
+            <div key={index} className="receipt-copy" style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '0.65rem', fontWeight: 800, marginBottom: '0.5rem', borderBottom: '1px solid black', paddingBottom: '0.2rem' }}>*** {copyType} ***</div>
+              <h2 style={{ fontSize: '1.2rem', fontWeight: 800, margin: '0 0 5px 0' }}>iTech PreOrder</h2>
+              
+              {printPreorder ? (
+                <>
+                  <div style={{ fontSize: '0.8rem', marginBottom: '10px', color: '#333' }}>
+                    {printPreorder.branch?.name} ({printPreorder.branch?.code})
                   </div>
-                </div>
-                
-                <div style={{ textAlign: 'left', margin: '10px 0', fontSize: '0.85rem', lineHeight: '1.4' }}>
-                  <div><strong>Product:</strong> {((printPreorder.reservation as Reservation)?.product as Product)?.name}</div>
-                  <div><strong>SKU:</strong> {((printPreorder.reservation as Reservation)?.product as Product)?.sku}</div>
-                  <div style={{ marginTop: '5px' }}><strong>Customer:</strong> {(printPreorder.reservation as Reservation)?.customer_name || 'N/A'}</div>
-                  <div><strong>Qty:</strong> {(printPreorder.reservation as Reservation)?.qty}</div>
-                  <div><strong>Date:</strong> {new Date(printPreorder.created_at).toLocaleDateString()}</div>
-                </div>
-                
-                <div style={{ marginTop: '20px', fontSize: '0.75rem', color: '#555' }}>
-                  Please present this code to claim your item.
-                </div>
-              </>
-            ) : salesOrderResult ? (
-              <>
-                <div style={{ margin: '15px 0', padding: '10px 0', borderTop: '1px dashed black', borderBottom: '1px dashed black' }}>
-                  <div style={{ fontSize: '0.8rem', color: '#555', marginBottom: '5px' }}>SALES ORDER</div>
-                  <div style={{ fontSize: '1.6rem', fontWeight: 'bold', letterSpacing: '0.05em' }}>
-                    {salesOrderResult.sales_order_number}
+                  
+                  <div style={{ margin: '10px 0', padding: '5px 0', borderTop: '1px dashed black', borderBottom: '1px dashed black' }}>
+                    <div style={{ fontSize: '0.7rem', color: '#333', marginBottom: '2px' }}>PREORDER CODE</div>
+                    <div style={{ fontSize: '1.4rem', fontWeight: 'bold', letterSpacing: '0.05em' }}>
+                      {printPreorder.preorder_code}
+                    </div>
                   </div>
-                </div>
-                <div style={{ textAlign: 'left', margin: '10px 0', fontSize: '0.85rem', lineHeight: '1.4' }}>
-                  <div><strong>Preorder Code:</strong> {salesOrderResult.preorder_code}</div>
-                  <div><strong>Date Delivered:</strong> {new Date().toLocaleDateString()}</div>
-                </div>
-                <div style={{ marginTop: '20px', fontSize: '0.75rem', color: '#555' }}>
-                  Item delivered. Thank you!
-                </div>
-              </>
-            ) : null}
-          </div>
+                  
+                  <div style={{ textAlign: 'left', margin: '5px 0', fontSize: '0.75rem', lineHeight: '1.3' }}>
+                    <div><strong>Product:</strong> {((printPreorder.reservation as Reservation)?.product as Product)?.name}</div>
+                    <div><strong>SKU:</strong> {((printPreorder.reservation as Reservation)?.product as Product)?.sku}</div>
+                    <div style={{ marginTop: '2px' }}><strong>Customer:</strong> {(printPreorder.reservation as Reservation)?.customer_name || 'N/A'}</div>
+                    <div><strong>Qty:</strong> {(printPreorder.reservation as Reservation)?.qty}</div>
+                    <div><strong>Date:</strong> {new Date(printPreorder.created_at).toLocaleDateString()}</div>
+                  </div>
+                  
+                  <div style={{ marginTop: '10px', fontSize: '0.65rem', color: '#333' }}>
+                    Please present this code to claim your item.
+                  </div>
+                </>
+              ) : salesOrderResult ? (
+                <>
+                  <div style={{ margin: '10px 0', padding: '5px 0', borderTop: '1px dashed black', borderBottom: '1px dashed black' }}>
+                    <div style={{ fontSize: '0.7rem', color: '#333', marginBottom: '2px' }}>SALES ORDER</div>
+                    <div style={{ fontSize: '1.4rem', fontWeight: 'bold', letterSpacing: '0.05em' }}>
+                      {salesOrderResult.sales_order_number}
+                    </div>
+                  </div>
+                  <div style={{ textAlign: 'left', margin: '5px 0', fontSize: '0.75rem', lineHeight: '1.3' }}>
+                    <div><strong>Preorder Code:</strong> {salesOrderResult.preorder_code}</div>
+                    <div><strong>Date Delivered:</strong> {new Date().toLocaleDateString()}</div>
+                  </div>
+                  <div style={{ marginTop: '10px', fontSize: '0.65rem', color: '#333' }}>
+                    Item delivered. Thank you!
+                  </div>
+                </>
+              ) : null}
+            </div>
+          ))}
         </div>
       )}
     </div>
