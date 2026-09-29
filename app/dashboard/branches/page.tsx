@@ -22,6 +22,10 @@ export default function BranchesPage() {
   const [deletingBranch, setDeletingBranch] = useState<Branch | null>(null);
   const [deleteError, setDeleteError] = useState('');
 
+  // Search & Filter State
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
+
   // Pagination State
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -90,8 +94,15 @@ export default function BranchesPage() {
     fontSize: '0.85rem', outline: 'none', marginBottom: '0.75rem',
   };
 
-  const totalPages = Math.ceil(branches.length / pageSize);
-  const paginatedBranches = branches.slice((page - 1) * pageSize, page * pageSize);
+  const filteredBranches = branches.filter(b => {
+    const q = search.toLowerCase();
+    const matchesSearch = !q || b.code.toLowerCase().includes(q) || b.name.toLowerCase().includes(q);
+    const matchesStatus = statusFilter === 'all' || (statusFilter === 'active' ? b.is_active : !b.is_active);
+    return matchesSearch && matchesStatus;
+  });
+
+  const totalPages = Math.ceil(filteredBranches.length / pageSize);
+  const paginatedBranches = filteredBranches.slice((page - 1) * pageSize, page * pageSize);
 
   return (
     <div className="animate-fade-in">
@@ -110,6 +121,51 @@ export default function BranchesPage() {
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           Add Branch
         </button>
+      </div>
+
+      {/* Search & Filter Bar */}
+      <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+        <div style={{ position: 'relative', flex: '1 1 280px', maxWidth: '420px' }}>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2" style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)' }}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input
+            id="branch-search"
+            type="text"
+            value={search}
+            onChange={e => { setSearch(e.target.value); setPage(1); }}
+            placeholder="Search by code or name…"
+            disabled={loading}
+            style={{
+              width: '100%', padding: '0.6rem 0.8rem 0.6rem 2.2rem',
+              background: 'var(--bg-input)', border: '1px solid var(--border-primary)',
+              borderRadius: 'var(--radius-md)', color: 'var(--text-primary)',
+              fontSize: '0.85rem', outline: 'none', opacity: loading ? 0.7 : 1,
+            }}
+          />
+        </div>
+        <div style={{ display: 'flex', gap: '0.25rem', borderRadius: 'var(--radius-md)', overflow: 'hidden', border: '1px solid var(--border-primary)' }}>
+          {(['all', 'active', 'inactive'] as const).map(f => (
+            <button
+              key={f}
+              onClick={() => { setStatusFilter(f); setPage(1); }}
+              disabled={loading}
+              style={{
+                padding: '0.5rem 0.85rem', border: 'none',
+                background: statusFilter === f ? 'var(--accent-primary)' : 'var(--bg-tertiary)',
+                color: statusFilter === f ? 'white' : 'var(--text-secondary)',
+                fontSize: '0.78rem', fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer',
+                textTransform: 'capitalize', transition: 'all 0.15s ease',
+                opacity: loading ? 0.7 : 1,
+              }}
+            >
+              {f}
+            </button>
+          ))}
+        </div>
+        {(search || statusFilter !== 'all') && (
+          <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 500 }}>
+            {filteredBranches.length} of {branches.length} branches
+          </span>
+        )}
       </div>
 
       {loading ? (
@@ -158,7 +214,7 @@ export default function BranchesPage() {
       <Pagination
         currentPage={page}
         totalPages={totalPages}
-        totalItems={branches.length}
+        totalItems={filteredBranches.length}
         pageSize={pageSize}
         onPageChange={setPage}
         onPageSizeChange={setPageSize}
