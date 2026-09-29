@@ -14,9 +14,9 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Any role (cashier+) can mark as delivered
-    if (!hasRole(session.staff.role, 'cashier')) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    // Only branch_admin+ can mark as delivered
+    if (!hasRole(session.staff.role, 'branch_admin')) {
+      return NextResponse.json({ error: 'Only branch admins can mark deliveries' }, { status: 403 });
     }
 
     const { id } = await params;

@@ -275,8 +275,8 @@ export default function PreordersPage() {
                     </button>
                   </div>
 
-                  {/* Deliver Button — only for active preorders */}
-                  {p.status === 'active' && (
+                  {/* Deliver Button — only for active preorders, branch_admin+ only */}
+                  {p.status === 'active' && (currentStaff?.role === 'branch_admin' || currentStaff?.role === 'super_admin') && (
                     <div style={{ paddingTop: '0.75rem', marginTop: '0.75rem', borderTop: '1px solid var(--border-secondary)' }}>
                       <ActionButton
                         id={`deliver-${p.id}`}
