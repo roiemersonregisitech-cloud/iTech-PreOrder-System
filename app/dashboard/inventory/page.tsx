@@ -1055,7 +1055,7 @@ export default function InventoryPage() {
       </Modal>
 
       {/* Allocate Central Stock Modal */}
-      <Modal isOpen={showAllocateCentral} onClose={() => setShowAllocateCentral(false)} title="Allocate Central Stock to Branch">
+      <Modal isOpen={showAllocateCentral} onClose={() => setShowAllocateCentral(false)} title="Allocate Central Stock to Branch" maxWidth="90vw">
         <div>
           <label style={labelStyle}>Select Product</label>
           <ProductPicker
@@ -1120,7 +1120,7 @@ export default function InventoryPage() {
       </Modal>
 
       {/* Transfer Stock Modal */}
-      <Modal isOpen={showTransfer} onClose={() => setShowTransfer(false)} title="Transfer Stock Between Branches">
+      <Modal isOpen={showTransfer} onClose={() => setShowTransfer(false)} title="Transfer Stock Between Branches" maxWidth="90vw">
         <div>
           <label style={labelStyle}>Select Product</label>
           <ProductPicker
