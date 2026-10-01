@@ -18,17 +18,26 @@ export async function GET(request: NextRequest) {
       .select("*")
       .order("name", { ascending: true });
 
-    if (search) {
-      query = query.or(`name.ilike.%${search}%,sku.ilike.%${search}%`);
-    }
-
     const { data, error } = await query;
     if (error)
       return NextResponse.json(
         { error: "Failed to fetch products" },
         { status: 500 },
       );
-    return NextResponse.json({ data });
+
+    let filtered = data || [];
+    if (search) {
+      const searchTerms = search.toLowerCase().split(/\s+/).filter(Boolean);
+      filtered = filtered.filter(
+        (item: Record<string, unknown>) => {
+          const searchTarget = `${item.name || ''} ${item.sku || ''}`.toLowerCase();
+          return searchTerms.every(term => searchTarget.includes(term));
+        }
+      );
+    }
+      
+    const { sortProductsByName } = await import('@/lib/sort');
+    return NextResponse.json({ data: sortProductsByName(filtered) });
   } catch {
     return NextResponse.json(
       { error: "Internal server error" },

@@ -48,6 +48,9 @@ export async function GET(request: NextRequest) {
         }
       );
     }
+    
+    const { sortProductsByName } = await import('@/lib/sort');
+    filtered = sortProductsByName(filtered, (item: any) => item.product?.name || '');
 
     return NextResponse.json({ data: filtered });
   } catch (err) {
