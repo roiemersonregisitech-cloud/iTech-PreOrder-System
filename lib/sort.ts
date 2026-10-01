@@ -7,12 +7,13 @@ export function sortProductsByName<T>(
     const nameB = nameSelector(b) || '';
 
     const parse = (name: string) => {
-      // Matches patterns like "iPhone 18 Pro 256GB", "Galaxy S24 1TB"
-      const match = name.match(/^(.*?)\s*(\d+)\s*(GB|TB)\s*$/i);
+      // Find storage like "256GB", "1 TB" anywhere in the string
+      const match = name.match(/(\d+)\s*(GB|TB)\b/i);
       if (match) {
-        const baseName = match[1].trim();
-        const value = parseInt(match[2], 10);
-        const unit = match[3].toUpperCase();
+        // Remove the storage part to create a comparable base name
+        const baseName = name.replace(match[0], '').replace(/\s+/g, ' ').trim();
+        const value = parseInt(match[1], 10);
+        const unit = match[2].toUpperCase();
         let storageGB = value;
         if (unit === 'TB') storageGB = value * 1024;
         return { baseName, storageGB };
@@ -23,12 +24,15 @@ export function sortProductsByName<T>(
     const parsedA = parse(nameA);
     const parsedB = parse(nameB);
 
-    // If base names are different, sort alphabetically by base name
+    // If base names are different, sort them naturally (so iPhone 9 comes before iPhone 10)
     if (parsedA.baseName !== parsedB.baseName) {
-      return parsedA.baseName.localeCompare(parsedB.baseName);
+      return parsedA.baseName.localeCompare(parsedB.baseName, undefined, { 
+        numeric: true, 
+        sensitivity: 'base' 
+      });
     }
     
-    // If base names are the same, sort by storage size (GB)
+    // If base names are the same, sort by storage size
     return parsedA.storageGB - parsedB.storageGB;
   });
 }
