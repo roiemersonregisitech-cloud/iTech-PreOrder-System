@@ -9,6 +9,7 @@ export type InventoryExportRow = {
   branch_name: string;
   qty_on_hand: number;
   qty_reserved: number; // Pending Deliveries
+  qty_backordered: number;
   qty_available: number;
   central_qty: number;
 };
@@ -31,6 +32,7 @@ export function InventoryExportManager({ data, branches, skus, isSuperAdmin, sta
     { key: "branch_name", label: "Branch" },
     { key: "qty_on_hand", label: "Current Stock (On Hand)" },
     { key: "qty_reserved", label: "Pending Deliveries (Reserved)" },
+    { key: "qty_backordered", label: "Backordered" },
     { key: "qty_available", label: "Available Stock" },
     { key: "central_qty", label: "Central Stock" },
   ];

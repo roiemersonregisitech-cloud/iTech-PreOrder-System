@@ -42,6 +42,7 @@ export default async function ExportPage() {
     id,
     qty_on_hand,
     qty_reserved,
+    qty_backordered,
     branch:branches(id, name),
     product:products(id, sku, name, central_qty)
   `);
@@ -94,6 +95,7 @@ export default async function ExportPage() {
     product_name: row.product?.name || "",
     qty_on_hand: row.qty_on_hand || 0,
     qty_reserved: row.qty_reserved || 0,
+    qty_backordered: row.qty_backordered || 0,
     qty_available: (row.qty_on_hand || 0) - (row.qty_reserved || 0),
     central_qty: row.product?.central_qty || 0,
   })) : [];
