@@ -16,6 +16,10 @@ export function sortProductsByName<T>(
         // Everything before the storage is the prefix (e.g., "IPHONE 18 PRO")
         const prefix = name.substring(0, matchIndex).trim();
         
+        // Extract a "family" name by stripping common phone variants (PRO, MAX, ULTRA, etc.)
+        // This groups "IPHONE 18 PRO" and "IPHONE 18 PRO MAX" into the same family "IPHONE 18"
+        const family = prefix.replace(/\b(PRO|MAX|PLUS|ULTRA|MINI|LITE|FE|CLASSIC)\b/ig, '').replace(/\s+/g, ' ').trim();
+        
         // Everything after the storage is the suffix (e.g., "(BLACK)")
         const suffix = name.substring(matchIndex + fullMatch.length).trim();
         
@@ -24,17 +28,30 @@ export function sortProductsByName<T>(
         let storageGB = value;
         if (unit === 'TB') storageGB = value * 1024;
         
-        return { prefix, storageGB, suffix };
+        return { family, prefix, storageGB, suffix };
       }
       
-      // If no storage found, treat the whole name as prefix
-      return { prefix: name, storageGB: 0, suffix: '' };
+      // If no storage found, treat the whole name as family & prefix
+      return { family: name, prefix: name, storageGB: 0, suffix: '' };
     };
 
     const parsedA = parse(nameA);
     const parsedB = parse(nameB);
 
-    // 1. Sort by Prefix (e.g. "IPHONE 18 PRO") naturally
+    // 1. Sort by Product Family (e.g., group all "IPHONE 18" together)
+    if (parsedA.family !== parsedB.family) {
+      return parsedA.family.localeCompare(parsedB.family, undefined, { 
+        numeric: true, 
+        sensitivity: 'base' 
+      });
+    }
+    
+    // 2. Sort by Storage Size numerically (e.g., 256 < 512)
+    if (parsedA.storageGB !== parsedB.storageGB) {
+      return parsedA.storageGB - parsedB.storageGB;
+    }
+    
+    // 3. Sort by exact Prefix (Model) (e.g., "IPHONE 18 PRO" vs "IPHONE 18 PRO MAX")
     if (parsedA.prefix !== parsedB.prefix) {
       return parsedA.prefix.localeCompare(parsedB.prefix, undefined, { 
         numeric: true, 
@@ -42,12 +59,7 @@ export function sortProductsByName<T>(
       });
     }
     
-    // 2. Sort by Storage Size numerically (e.g. 256 < 512)
-    if (parsedA.storageGB !== parsedB.storageGB) {
-      return parsedA.storageGB - parsedB.storageGB;
-    }
-    
-    // 3. Sort by Suffix (e.g. "(BLACK)" vs "(BURGUNDY)") naturally
+    // 4. Sort by Suffix / Color (e.g., "(BLACK)" vs "(BURGUNDY)") naturally
     return parsedA.suffix.localeCompare(parsedB.suffix, undefined, {
       numeric: true,
       sensitivity: 'base'
