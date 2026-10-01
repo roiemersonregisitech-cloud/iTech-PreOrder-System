@@ -1,6 +1,7 @@
 import { getSession } from "@/lib/auth/session";
 import { createServiceClient } from "@/lib/supabase/server";
-import { ExportManager } from "@/components/export-manager";
+import { ExportTabs } from "@/components/export-tabs";
+import { sortProductsByName } from "@/lib/sort";
 
 export default async function ExportPage() {
   const session = await getSession();
@@ -36,13 +37,26 @@ export default async function ExportPage() {
     )
   `);
 
+  // Fetch all inventory
+  const inventoryQuery = supabase.from("inventory").select(`
+    id,
+    qty_on_hand,
+    qty_reserved,
+    branch:branches(id, name),
+    product:products(id, sku, name, central_qty)
+  `);
+
   if (!isSuperAdmin && branchId) {
     preordersQuery.eq("branch_id", branchId);
+    inventoryQuery.eq("branch_id", branchId);
   }
 
-  const { data: rawData } = await preordersQuery;
+  const [{ data: rawPreorders }, { data: rawInventory }] = await Promise.all([
+    preordersQuery,
+    inventoryQuery
+  ]);
 
-  const preorders = rawData ? (rawData as unknown as Array<{
+  const preorders = rawPreorders ? (rawPreorders as unknown as Array<{
     id: string;
     preorder_code: string;
     status: string;
@@ -73,27 +87,47 @@ export default async function ExportPage() {
     is_backorder: row.reservation?.is_backorder || false,
   })) : [];
 
+  const rawInventoryMapped = rawInventory ? (rawInventory as any[]).map((row) => ({
+    id: row.id,
+    branch_name: row.branch?.name || "Unknown",
+    sku: row.product?.sku || "",
+    product_name: row.product?.name || "",
+    qty_on_hand: row.qty_on_hand || 0,
+    qty_reserved: row.qty_reserved || 0,
+    qty_available: (row.qty_on_hand || 0) - (row.qty_reserved || 0),
+    central_qty: row.product?.central_qty || 0,
+  })) : [];
+
+  // Sort inventory naturally
+  const inventory = sortProductsByName(rawInventoryMapped, (item) => item.product_name);
+
   // Get distinct branches and SKUs for filtering
-  const branches = Array.from(new Set(preorders.map(p => p.branch_name))).sort();
-  const skus = Array.from(new Set(preorders.map(p => p.sku))).sort();
-  const statuses = Array.from(new Set(preorders.map(p => p.status))).sort();
+  const preorderBranches = Array.from(new Set(preorders.map(p => p.branch_name))).sort();
+  const preorderSkus = Array.from(new Set(preorders.map(p => p.sku))).sort();
+  const preorderStatuses = Array.from(new Set(preorders.map(p => p.status))).sort();
+
+  const inventoryBranches = Array.from(new Set(inventory.map(i => i.branch_name))).sort();
+  const inventorySkus = Array.from(new Set(inventory.map(i => i.sku))).sort();
 
   return (
     <div className="animate-fade-in">
       <div className="page-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
           <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-heading)' }}>Export Data</h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Filter and export your preorder data.</p>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Filter and export your preorder and inventory data.</p>
         </div>
       </div>
       
-      <ExportManager 
-        data={preorders} 
-        branches={branches} 
-        skus={skus} 
-        statuses={statuses} 
+      <ExportTabs
         isSuperAdmin={isSuperAdmin}
         staffBranchName={staffBranchName}
+        preorders={preorders}
+        preorderBranches={preorderBranches}
+        preorderSkus={preorderSkus}
+        preorderStatuses={preorderStatuses}
+        inventory={inventory}
+        inventoryBranches={inventoryBranches}
+        inventorySkus={inventorySkus}
       />
     </div>
   );

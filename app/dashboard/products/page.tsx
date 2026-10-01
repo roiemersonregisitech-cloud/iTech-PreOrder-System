@@ -226,11 +226,19 @@ export default function ProductsPage() {
     fetchProducts();
   }
 
+  const areAllBackorderAllowed = products.length > 0 && products.every(p => p.backorder_allowed);
+
   // Handle Mark All Backorder
   async function handleMarkAllBackorder() {
-    if (!confirm('Are you sure you want to allow backorder for all products?')) return;
+    const willAllow = !areAllBackorderAllowed;
+    const actionText = willAllow ? 'allow' : 'disallow';
+    
+    if (!confirm(`Are you sure you want to ${actionText} backorders for all products?`)) return;
+    
     const res = await fetch('/api/products/mark-all-backorder', {
       method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ allow: willAllow })
     });
     const data = await res.json();
     if (!res.ok) {
@@ -282,9 +290,9 @@ export default function ProductsPage() {
                 style={{
                   padding: '0.6rem 1rem',
                   borderRadius: 'var(--radius-md)',
-                  background: 'var(--bg-tertiary)',
-                  border: '1px solid var(--border-primary)',
-                  color: 'var(--text-primary)',
+                  background: areAllBackorderAllowed ? 'rgba(239, 68, 68, 0.1)' : 'var(--bg-tertiary)',
+                  border: areAllBackorderAllowed ? '1px solid rgba(239, 68, 68, 0.3)' : '1px solid var(--border-primary)',
+                  color: areAllBackorderAllowed ? 'var(--accent-danger)' : 'var(--text-primary)',
                   fontSize: '0.85rem',
                   fontWeight: 600,
                   cursor: loading ? 'not-allowed' : 'pointer',
@@ -295,7 +303,7 @@ export default function ProductsPage() {
                   opacity: loading ? 0.7 : 1
                 }}
               >
-                Mark All Allow Backorder
+                {areAllBackorderAllowed ? 'Disallow All Backorders' : 'Allow All Backorders'}
               </button>
               <button
                 id="create-product-btn"
