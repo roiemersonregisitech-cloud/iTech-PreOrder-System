@@ -12,6 +12,8 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const branchId = searchParams.get('branch_id');
+    const search = searchParams.get('search');
+    const status = searchParams.get('status'); // 'active', 'inactive', or null (all)
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '50');
     const offset = (page - 1) * limit;
@@ -21,6 +23,16 @@ export async function GET(request: NextRequest) {
       .select('*, branch:branches(*)', { count: 'exact' })
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
+
+    if (search) {
+      query = query.ilike('full_name', `%${search}%`);
+    }
+
+    if (status === 'active') {
+      query = query.eq('is_active', true);
+    } else if (status === 'inactive') {
+      query = query.eq('is_active', false);
+    }
 
     if (session.staff.role !== 'super_admin') {
       query = query.eq('branch_id', session.staff.branch_id!);

@@ -37,6 +37,13 @@ export default function StaffPage() {
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [updatingStaffId, setUpdatingStaffId] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+
+  // Delete state
+  const [deleteStaff, setDeleteStaff] = useState<Staff | null>(null);
+  const [deleteError, setDeleteError] = useState('');
+
 
   // Pagination state
   const [page, setPage] = useState(1);
@@ -62,10 +69,14 @@ export default function StaffPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchStaff = useCallback(async () => {
-    const res = await fetch('/api/staff');
+    const queryParams = new URLSearchParams();
+    if (search) queryParams.set('search', search);
+    if (statusFilter !== 'all') queryParams.set('status', statusFilter);
+    const qs = queryParams.toString();
+    const res = await fetch(`/api/staff${qs ? `?${qs}` : ''}`);
     const data = await res.json();
     if (res.ok) setStaffList(data.data || []);
-  }, []);
+  }, [search, statusFilter]);
 
   const fetchBranches = useCallback(async () => {
     const res = await fetch('/api/branches');
@@ -96,6 +107,25 @@ export default function StaffPage() {
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (!initialized.current) return;
+    setPage(1);
+    fetchStaff();
+  }, [search, statusFilter, fetchStaff]);
+
+  async function handleDelete() {
+    if (!deleteStaff) return;
+    setDeleteError('');
+    const res = await fetch(`/api/staff/${deleteStaff.id}`, { method: 'DELETE' });
+    const data = await res.json();
+    if (!res.ok) {
+      setDeleteError(data.error || 'Failed to delete staff');
+      return;
+    }
+    setDeleteStaff(null);
+    fetchStaff();
+  }
 
   async function handleCreate() {
     setCreateError('');
@@ -256,7 +286,25 @@ export default function StaffPage() {
           <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-heading)' }}>Staff</h1>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Manage user accounts</p>
         </div>
-        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+          <input
+            type="text"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search by name…"
+            disabled={loading}
+            style={{ ...inputStyle, width: '200px', marginBottom: 0, opacity: loading ? 0.7 : 1 }}
+          />
+          <select
+            value={statusFilter}
+            onChange={e => setStatusFilter(e.target.value)}
+            disabled={loading}
+            style={{ ...inputStyle, width: '140px', marginBottom: 0, opacity: loading ? 0.7 : 1 }}
+          >
+            <option value="all">All Status</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
           {/* Import & Template — super_admin only */}
           {currentStaff?.role === 'super_admin' && (
             <>
@@ -329,17 +377,34 @@ export default function StaffPage() {
                   <span className={`badge ${s.is_active ? 'badge-confirmed' : 'badge-cancelled'}`}>{s.is_active ? 'Active' : 'Inactive'}</span>
                 </td>
                 <td style={{ padding: '0.75rem 1rem' }}>
-                  {(currentStaff?.role === 'super_admin' || (currentStaff?.role === 'branch_admin' && s.role === 'cashier')) && (
-                    <button id={`toggle-staff-${s.id}`} disabled={updatingStaffId === s.id} onClick={() => toggleActive(s)} style={{
-                      padding: '0.3rem 0.6rem', borderRadius: 'var(--radius-sm)',
-                      background: s.is_active ? 'var(--accent-danger-bg)' : 'var(--accent-success-bg)',
-                      border: 'none', color: s.is_active ? 'var(--accent-danger)' : 'var(--accent-success)',
-                      fontSize: '0.75rem', cursor: updatingStaffId === s.id ? 'not-allowed' : 'pointer', fontWeight: 600,
-                      opacity: updatingStaffId === s.id ? 0.7 : 1,
-                    }}>
-                      {updatingStaffId === s.id ? <Spinner size={14} /> : (s.is_active ? 'Deactivate' : 'Activate')}
-                    </button>
-                  )}
+                  <div style={{ display: 'flex', gap: '0.4rem' }}>
+                    {(currentStaff?.role === 'super_admin' || (currentStaff?.role === 'branch_admin' && s.role === 'cashier')) && (
+                      <button id={`toggle-staff-${s.id}`} disabled={updatingStaffId === s.id} onClick={() => toggleActive(s)} style={{
+                        padding: '0.3rem 0.6rem', borderRadius: 'var(--radius-sm)',
+                        background: s.is_active ? 'var(--accent-danger-bg)' : 'var(--accent-success-bg)',
+                        border: 'none', color: s.is_active ? 'var(--accent-danger)' : 'var(--accent-success)',
+                        fontSize: '0.75rem', cursor: updatingStaffId === s.id ? 'not-allowed' : 'pointer', fontWeight: 600,
+                        opacity: updatingStaffId === s.id ? 0.7 : 1,
+                      }}>
+                        {updatingStaffId === s.id ? <Spinner size={14} /> : (s.is_active ? 'Deactivate' : 'Activate')}
+                      </button>
+                    )}
+                    {currentStaff?.role === 'super_admin' && s.id !== currentStaff.id && (
+                      <button
+                        id={`delete-staff-${s.id}`}
+                        onClick={() => { setDeleteStaff(s); setDeleteError(''); }}
+                        style={{
+                          padding: '0.3rem 0.6rem', borderRadius: 'var(--radius-sm)',
+                          background: 'rgba(239, 68, 68, 0.1)',
+                          border: '1px solid rgba(239, 68, 68, 0.3)',
+                          color: 'var(--accent-danger)',
+                          fontSize: '0.75rem', cursor: 'pointer', fontWeight: 600,
+                        }}
+                      >
+                        Delete
+                      </button>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}
@@ -603,6 +668,47 @@ export default function StaffPage() {
               style={{ width: '100%', justifyContent: 'center', padding: '0.7rem' }}
             />
           )}
+        </div>
+      </Modal>
+      {/* Delete Confirmation Modal */}
+      <Modal isOpen={!!deleteStaff} onClose={() => setDeleteStaff(null)} title="Delete Staff">
+        <div>
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
+            Are you sure you want to permanently delete <strong>{deleteStaff?.full_name}</strong>?
+          </p>
+          <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
+            This will remove their account and authentication credentials. This action cannot be undone. If the staff member has associated records, the deletion may fail — consider deactivating instead.
+          </p>
+
+          {deleteError && (
+            <div style={{ padding: '0.5rem 0.8rem', borderRadius: 'var(--radius-sm)', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--accent-danger)', fontSize: '0.8rem', marginBottom: '1rem' }}>
+              {deleteError}
+            </div>
+          )}
+
+          <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+            <button
+              type="button"
+              onClick={() => setDeleteStaff(null)}
+              style={{
+                padding: '0.5rem 1rem',
+                background: 'transparent',
+                border: '1px solid var(--border-primary)',
+                color: 'var(--text-secondary)',
+                borderRadius: 'var(--radius-md)',
+                cursor: 'pointer',
+              }}
+            >
+              Cancel
+            </button>
+            <ActionButton
+              id="confirm-delete-staff"
+              label="Delete Staff"
+              loadingLabel="Deleting…"
+              variant="danger"
+              onClick={handleDelete}
+            />
+          </div>
         </div>
       </Modal>
     </div>

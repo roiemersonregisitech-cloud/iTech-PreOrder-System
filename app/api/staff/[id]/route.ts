@@ -53,3 +53,52 @@ export async function PUT(
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const session = await getSession();
+    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!hasRole(session.staff.role, 'super_admin'))
+      return NextResponse.json({ error: 'Only super admins can delete staff' }, { status: 403 });
+
+    const { id } = await params;
+    const supabase = await createServiceClient();
+
+    // Prevent self-deletion
+    if (id === session.userId) {
+      return NextResponse.json({ error: 'You cannot delete your own account' }, { status: 400 });
+    }
+
+    // Get target staff
+    const { data: target } = await supabase.from('staff').select('*').eq('id', id).single();
+    if (!target) return NextResponse.json({ error: 'Staff not found' }, { status: 404 });
+
+    // Delete staff record first
+    const { error: staffError } = await supabase.from('staff').delete().eq('id', id);
+    if (staffError) {
+      console.error('Failed to delete staff record:', staffError);
+      return NextResponse.json({ error: 'Failed to delete staff. They may have associated records — try deactivating instead.' }, { status: 500 });
+    }
+
+    // Delete auth user
+    const { error: authError } = await supabase.auth.admin.deleteUser(id);
+    if (authError) {
+      console.error('Failed to delete auth user:', authError);
+      // Staff record already deleted, log but don't fail
+    }
+
+    await writeAuditLog({
+      userId: session.userId, action: 'staff.delete',
+      entityType: 'staff', entityId: id,
+      metadata: { deleted_name: target.full_name, deleted_role: target.role },
+      request,
+    });
+
+    return NextResponse.json({ success: true });
+  } catch {
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}

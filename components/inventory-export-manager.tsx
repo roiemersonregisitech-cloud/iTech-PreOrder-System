@@ -11,6 +11,7 @@ export type InventoryExportRow = {
   qty_reserved: number; // Pending Deliveries
   qty_backordered: number;
   qty_available: number;
+  qty_delivered: number;
   central_qty: number;
 };
 
@@ -34,6 +35,7 @@ export function InventoryExportManager({ data, branches, skus, isSuperAdmin, sta
     { key: "qty_reserved", label: "Pending Deliveries (Reserved)" },
     { key: "qty_backordered", label: "Backordered" },
     { key: "qty_available", label: "Available Stock" },
+    { key: "qty_delivered", label: "Delivered" },
     { key: "central_qty", label: "Central Stock" },
   ];
 

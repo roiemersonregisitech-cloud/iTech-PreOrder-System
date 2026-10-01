@@ -40,22 +40,42 @@ export default async function ExportPage() {
   // Fetch all inventory
   const inventoryQuery = supabase.from("inventory").select(`
     id,
+    branch_id,
     qty_on_hand,
     qty_reserved,
     qty_backordered,
-    branch:branches(id, name),
-    product:products(id, sku, name, central_qty)
+    product_id
   `);
+
+  // Fetch all products
+  const productsQuery = supabase.from("products").select("id, sku, name, central_qty, is_active");
+  
+  // Fetch all branches
+  const branchesQuery = supabase.from("branches").select("id, name");
+
+  // Fetch delivered counts
+  const deliveredQuery = supabase.from("delivered_items").select("product_id, branch_id, qty");
 
   if (!isSuperAdmin && branchId) {
     preordersQuery.eq("branch_id", branchId);
     inventoryQuery.eq("branch_id", branchId);
+    deliveredQuery.eq("branch_id", branchId);
+    branchesQuery.eq("id", branchId);
   }
 
-  const [{ data: rawPreorders }, { data: rawInventory }] = await Promise.all([
+  const [{ data: rawPreorders }, { data: rawInventory }, { data: rawDelivered }, { data: rawProducts }, { data: rawBranches }] = await Promise.all([
     preordersQuery,
-    inventoryQuery
+    inventoryQuery,
+    deliveredQuery,
+    productsQuery,
+    branchesQuery
   ]);
+
+  const deliveredMap = new Map<string, number>();
+  for (const item of (rawDelivered || [])) {
+    const key = `${item.product_id}:${item.branch_id}`;
+    deliveredMap.set(key, (deliveredMap.get(key) || 0) + item.qty);
+  }
 
   const preorders = rawPreorders ? (rawPreorders as unknown as Array<{
     id: string;
@@ -88,17 +108,38 @@ export default async function ExportPage() {
     is_backorder: row.reservation?.is_backorder || false,
   })) : [];
 
-  const rawInventoryMapped = rawInventory ? (rawInventory as any[]).map((row) => ({
-    id: row.id,
-    branch_name: row.branch?.name || "Unknown",
-    sku: row.product?.sku || "",
-    product_name: row.product?.name || "",
-    qty_on_hand: row.qty_on_hand || 0,
-    qty_reserved: row.qty_reserved || 0,
-    qty_backordered: row.qty_backordered || 0,
-    qty_available: (row.qty_on_hand || 0) - (row.qty_reserved || 0),
-    central_qty: row.product?.central_qty || 0,
-  })) : [];
+  const inventoryMap = new Map<string, any>();
+  for (const inv of (rawInventory || [])) {
+    inventoryMap.set(`${inv.product_id}:${inv.branch_id}`, inv);
+  }
+
+  const rawInventoryMapped = [];
+  
+  for (const product of (rawProducts || [])) {
+    if (product.is_active === false) continue;
+    
+    for (const branch of (rawBranches || [])) {
+      const key = `${product.id}:${branch.id}`;
+      const inv = inventoryMap.get(key);
+      
+      const qtyOnHand = inv?.qty_on_hand || 0;
+      const qtyReserved = inv?.qty_reserved || 0;
+      const qtyBackordered = inv?.qty_backordered || 0;
+      
+      rawInventoryMapped.push({
+        id: inv?.id || key,
+        branch_name: branch.name,
+        sku: product.sku,
+        product_name: product.name,
+        qty_on_hand: qtyOnHand,
+        qty_reserved: qtyReserved,
+        qty_backordered: qtyBackordered,
+        qty_available: qtyOnHand - qtyReserved,
+        qty_delivered: deliveredMap.get(key) || 0,
+        central_qty: product.central_qty || 0,
+      });
+    }
+  }
 
   // Sort inventory naturally
   const inventory = sortProductsByName(rawInventoryMapped, (item) => item.product_name);
