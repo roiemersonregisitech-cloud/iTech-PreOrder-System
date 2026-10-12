@@ -327,6 +327,34 @@ body {
   }
 }
 
+/* Date Filter Responsive Utilities */
+.date-filter-label-mobile {
+  display: none !important;
+}
+
+@media (max-width: 640px) {
+  .date-filter-label-desktop {
+    display: none !important;
+  }
+  .date-filter-label-mobile {
+    display: inline-block !important;
+  }
+  .date-filter-trigger-mini {
+    padding: 0.35rem 0.5rem !important;
+  }
+}
+
+@keyframes slideUpSheet {
+  from {
+    transform: translateY(100%);
+    opacity: 0.8;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
 /* Small phone breakpoint (≤480px) */
 @media (max-width: 480px) {
   .stats-grid {

@@ -14,6 +14,8 @@ export async function GET(request: NextRequest) {
     const branchId = searchParams.get('branch_id');
     const code = searchParams.get('code');
     const status = searchParams.get('status');
+    const dateFrom = searchParams.get('date_from');
+    const dateTo = searchParams.get('date_to');
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '50');
     const offset = (page - 1) * limit;
@@ -73,6 +75,15 @@ export async function GET(request: NextRequest) {
     const isBackorder = searchParams.get('is_backorder');
     if (isBackorder === 'true') {
       query = query.eq('is_backorder', true);
+    }
+
+    if (dateFrom) {
+      const fromIso = dateFrom.includes('T') ? dateFrom : `${dateFrom}T00:00:00`;
+      query = query.gte('created_at', fromIso);
+    }
+    if (dateTo) {
+      const toIso = dateTo.includes('T') ? dateTo : `${dateTo}T23:59:59.999`;
+      query = query.lte('created_at', toIso);
     }
 
     const { data, error, count } = await query;

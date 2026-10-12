@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Modal, ActionButton, Pagination, SkeletonCard } from '@/components/ui';
+import { DateFilter } from '@/components/date-filter';
 import type { Preorder, Reservation, Product, Staff } from '@/lib/types';
 
 export default function PreordersPage() {
@@ -9,6 +10,8 @@ export default function PreordersPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
 
   // Pagination state
   const [page, setPage] = useState(1);
@@ -50,6 +53,8 @@ export default function PreordersPage() {
     const params = new URLSearchParams();
     if (search) params.set('code', search);
     if (statusFilter) params.set('status', statusFilter);
+    if (dateFrom) params.set('date_from', dateFrom);
+    if (dateTo) params.set('date_to', dateTo);
     params.set('page', page.toString());
     params.set('limit', pageSize.toString());
     const res = await fetch(`/api/preorders?${params}`);
@@ -58,7 +63,7 @@ export default function PreordersPage() {
       setPreorders(data.data || []);
       setTotalItems(data.pagination?.total || 0);
     }
-  }, [search, statusFilter, page, pageSize]);
+  }, [search, statusFilter, dateFrom, dateTo, page, pageSize]);
 
   const initialized = useRef(false);
 
@@ -82,7 +87,7 @@ export default function PreordersPage() {
   useEffect(() => {
     if (!initialized.current) return;
     fetchPreorders();
-  }, [search, statusFilter, page, pageSize, fetchPreorders]);
+  }, [search, statusFilter, dateFrom, dateTo, page, pageSize, fetchPreorders]);
 
   // Deliver handler
   async function handleDeliver() {
@@ -160,7 +165,19 @@ export default function PreordersPage() {
       <div className="page-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
           <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-heading)' }}>Preorders</h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Confirmed reservations with ZenPOS invoice</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap', marginTop: '0.25rem' }}>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', margin: 0 }}>Confirmed reservations with ZenPOS invoice</p>
+            <DateFilter
+              dateFrom={dateFrom}
+              dateTo={dateTo}
+              onChange={(from, to) => {
+                setDateFrom(from);
+                setDateTo(to);
+                setPage(1);
+              }}
+              disabled={loading && !dateFrom && !dateTo}
+            />
+          </div>
         </div>
       </div>
 
